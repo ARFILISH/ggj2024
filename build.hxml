@@ -1,0 +1,12 @@
+-cp src/
+
+-lib heaps
+-lib hscript
+-lib hldx
+
+-m Main
+
+-D windowSize=1280x720
+
+-hl build/game.hl
+--debug
