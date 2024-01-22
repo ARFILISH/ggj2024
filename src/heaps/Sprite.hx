@@ -45,6 +45,45 @@ class Sprite extends Drawable {
         animCount = 0;
     }
 
+    public function load(path: String):Void {
+        final xmlContent = hxd.Res.load(path).toText();
+        final xmlTree = Xml.parse(xmlContent).firstElement();
+        if (xmlTree.nodeName != "sprite") throw 'Invalid sprite $path!';
+        final sources = new Array<Array<Array<Tile>>>();
+        for (el in xmlTree.elementsNamed("source")) {
+            final value = el.firstChild().nodeValue;
+            final originalTile = hxd.Res.load(value).toTile();
+            var size = Std.parseFloat(el.get("size") ?? '${originalTile.width}');
+            if (size > originalTile.width) size = originalTile.width;
+            sources.push(originalTile.grid(size,
+                Std.parseFloat(el.get("dx") ?? '0'),
+                Std.parseFloat(el.get("dy") ?? '0'),
+            ));
+        }
+        for (el in xmlTree.elementsNamed("anim")) {
+            final frames = new Array<Tile>();
+            for (f in el.elementsNamed("frame")) {
+                final tile = sources[
+                    Std.parseInt(f.get("src"))
+                ][
+                    Std.parseInt(f.get("x") ?? "0")
+                ][
+                    Std.parseInt(f.get("y") ?? "0")
+                ];
+                tile.dx = Std.parseFloat(f.get("dx") ?? "0");
+                tile.dy = Std.parseFloat(f.get("dx") ?? "0");
+                frames.push(tile);
+            }
+            final loop = el.get("loop");
+            addAnimation(
+                Std.parseInt(el.get("id")),
+                frames,
+                Std.parseFloat(el.get("speed")),
+                loop != null ? loop == "true" : true
+            );
+        }
+    }
+
     public function addAnimation(id: Int, frames: Array<Tile>, speed: Float, loop: Bool):Void {
         if (animations.exists(id)) throw 'Animation $id already exists!';
         animations[id] = new Animation(frames, speed, loop);
@@ -71,12 +110,12 @@ class Sprite extends Drawable {
 
     public function play(id: Int, start: Float = 0.0):Void {
         if (current == id) return;
-        if (!animations.exists(id)) throw 'Animation $id does not exist!';
+        if (!animations.exists(id)) return;
         current = id;
     }
 
     public function playOverride(id: Int, start: Float = 0.0):Void {
-        if (!animations.exists(id)) throw 'Animation $id does not exist!';
+        if (!animations.exists(id)) return;
         current = id;
     }
 

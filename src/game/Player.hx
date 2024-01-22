@@ -23,12 +23,8 @@ class Player extends Entity {
     private var focusing : Bool;
 
     private override function added(s2d: h2d.Scene):Void {
-        final tiles = hxd.Res.sprites.game.sprPlayer.toTile().grid(32.0);
         sprite = new Sprite(s2d);
-        sprite.addAnimation(PlayerAnimation.Forward, [tiles[0][0].center(), tiles[1][0].center()], 15.0, true);
-        sprite.addAnimation(PlayerAnimation.Left, [tiles[0][1].center(), tiles[1][1].center()], 15.0, true);
-        sprite.addAnimation(PlayerAnimation.Right, [tiles[0][2].center(), tiles[1][2].center()], 15.0, true);
-        sprite.addAnimation(PlayerAnimation.Focus, [tiles[0][3].center()], 15.0, true);
+        sprite.load("sprites/game/sprPlayer.xml");
         sprite.addShader(new shaders.Blink(0, 0.17, Vector4.fromColor(0x00000000), 1.0));
         hitboxSprite = new Bitmap(hxd.Res.sprites.game.sprPlayerHitbox.toTile().center(), s2d);
         velX = 0.0;
@@ -72,5 +68,19 @@ class Player extends Entity {
         hitboxSprite.visible = focusing;
         sprite.x = hitboxSprite.x = x;
         sprite.y = hitboxSprite.y = y;
+    }
+
+    public function graze(by: { grazeCount : Int }):Void {
+        if (by.grazeCount < 5) {
+            by.grazeCount++;
+            trace("GRAZE!");
+        }
+    }
+
+    public function applyDamage():Void {
+        if (invincibility > 0.0) return;
+        invincibility = 2.0;
+        x = Const.PLAYER_START_X;
+        y = Const.PLAYER_START_Y;
     }
 }

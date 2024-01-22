@@ -4,21 +4,15 @@ import hscript.Interp;
 import hscript.Parser;
 import heaps.Sprite;
 
-private enum EnemyPosition {
-    Local(x : Float, y : Float);
-    Relative(x : Float, y : Float);
-    World(x : Float, y : Float);
-    Entity(ent : Entity, x : Float, y : Float);
-}
-
 private typedef EnemyEvent = {
     time : Float,
     cb : Void->Void,
 }
 
 private typedef EnemyDestinationPoint = {
-    pos : EnemyPosition,
+    pos : Types.Position,
     speed : Float,
+    ?cb : Void->Void,
 }
 
 class Enemy extends Entity {
@@ -44,15 +38,21 @@ class Enemy extends Entity {
 
     private var events : List<EnemyEvent>;
     private var time : Float;
-    private var player : Player;
+    public var player(default, null) : Player;
     private var moveDestQueue : List<EnemyDestinationPoint>;
+    private var children : Array<Enemy>;
 
     private var preparedParams : Map<String, Any>;
+
+    private var bulletManagers : Map<Int, BulletManager>;
 
     private var radius : Float;
     private var mask : Int;
 
+    private var grazeCount : Int;
+
     private override function added(s2d: h2d.Scene):Void {
+        parent = null;
         sprite = new Sprite(s2d);
         time = 0.0;
         events = new List();
@@ -60,12 +60,21 @@ class Enemy extends Entity {
         player = scene.getEntity(Player);
         radius = 0.0;
         mask = 0;
+        children = new Array();
+        grazeCount = 0;
     }
 
     private override function destroyed(s2d: h2d.Scene):Void {
         sprite.remove();
         events.clear();
         moveDestQueue.clear();
+        if (parent != null) {
+            parent.children.remove(this);
+            parent = null;
+        }
+        for (c in children) c.destroy();
+        children = null;
+        grazeCount = 0;
     }
 
     public function loadScript(path: String, ?params: Map<String, Any>) {
@@ -73,15 +82,27 @@ class Enemy extends Entity {
         final parser = new Parser();
         final ast = parser.parseString(file, 'enemy_$tag');
         final interp = new Interp();
-        interp.variables["localX"] = lx;
-        interp.variables["localY"] = ly;
-        interp.variables["relativeX"] = rx;
-        interp.variables["relativeY"] = ry;
-        interp.variables["worldX"] = x;
-        interp.variables["worldY"] = y;
+        interp.variables["getLocalX"] = get_lx;
+        interp.variables["setLocalX"] = set_lx;
+        interp.variables["getLocalY"] = get_ly;
+        interp.variables["setLocalY"] = set_ly;
+        interp.variables["getRelativeX"] = get_rx;
+        interp.variables["setRelativeX"] = set_rx;
+        interp.variables["getRelativeY"] = get_ry;
+        interp.variables["setRelativeY"] = set_ry;
+        interp.variables["getWorldX"] = function():Float { return x; };
+        interp.variables["setWorldX"] = function(val: Float):Float { return x = val; };
+        interp.variables["getWorldY"] = function():Float { return y; };
+        interp.variables["setWorldY"] = function(val: Float):Float { return y = val; };
+        interp.variables["getRadius"] = function():Float { return radius; };
+        interp.variables["setRadius"] = function(val: Float):Float { return radius = val; };
+        interp.variables["getMask"] = function():Int { return mask; };
+        interp.variables["setMask"] = function(val: Int):Int { return mask = val; };
         interp.variables["player"] = player;
         interp.variables["addEvent"] = addEvent;
         interp.variables["setSprite"] = setSprite;
+        interp.variables["playAnimation"] = playAnimation;
+        interp.variables["playAnimationOverride"] = playAnimationOverride;
         interp.variables["destroy"] = destroy;
         interp.variables["moveToByTime"] = moveToByTime;
         interp.variables["moveToBySpeed"] = moveToBySpeed;
@@ -92,17 +113,17 @@ class Enemy extends Entity {
         interp.variables["stopMoving"] = stopMoving;
         interp.variables["setPreparedParam"] = setPreparedParam;
         interp.variables["clearPreparedParams"] = clearPreparedParams;
-        interp.variables["LocalSpace"] = EnemyPosition.Local;
-        interp.variables["RelativeSpace"] = EnemyPosition.Relative;
-        interp.variables["WorldSpace"] = EnemyPosition.World;
-        interp.variables["EntitySpace"] = EnemyPosition.Entity;
+        interp.variables["LocalSpace"] = Types.Position.Local;
+        interp.variables["RelativeSpace"] = Types.Position.Relative;
+        interp.variables["WorldSpace"] = Types.Position.World;
+        interp.variables["EntitySpace"] = Types.Position.Entity;
         if (params != null) for (k => v in params) interp.variables[k] = v;
         interp.execute(ast);
     }
 
     private override function update(delta: Float):Void {
         while (!events.isEmpty() && events.first().time <= time) events.pop().cb();
-        if (events.isEmpty() && moveDestQueue.isEmpty()) {
+        if (events.isEmpty() && moveDestQueue.isEmpty() && children.length == 0) {
             destroy();
             return;
         }
@@ -141,48 +162,58 @@ class Enemy extends Entity {
             }
             var hInput = destX - thisX;
             var vInput = destY - thisY;
-            var length = hInput * hInput + vInput * vInput;
-            if (length > 0.0) {
-                length = Math.sqrt(length);
-                if (length <= speed) {
-                    switch (moveDestination.pos) {
-                        case Local(_, _): {
-                            lx = destX;
-                            ly = destY;
-                        }
-                        case Relative(_, _): {
-                            rx = destX;
-                            ry = destY;
-                        }
-                        case World(_, _) | Entity(_, _, _): {
-                            x = destX;
-                            y = destY;
-                        }
+            final length = hInput * hInput + vInput * vInput;
+            if (length > 0.0 && Math.sqrt(length) > speed) {
+                hInput = hInput / Math.sqrt(length) * speed;
+                vInput = vInput / Math.sqrt(length) * speed;
+                switch (moveDestination.pos) {
+                    case Local(_, _): {
+                        lx += hInput;
+                        ly += vInput;
                     }
-                    moveDestQueue.pop();
-                } else {
-                    hInput /= length;
-                    vInput /= length;
-                    hInput *= speed;
-                    vInput *= speed;
-                    switch (moveDestination.pos) {
-                        case Local(_, _): {
-                            lx += hInput;
-                            ly += vInput;
-                        }
-                        case Relative(_, _): {
-                            rx += hInput;
-                            ry += vInput;
-                        }
-                        case World(_, _) | Entity(_, _, _): {
-                            x += hInput;
-                            y += vInput;
-                        }
+                    case Relative(_, _): {
+                        rx += hInput;
+                        ry += vInput;
+                    }
+                    case World(_, _) | Entity(_, _, _): {
+                        x += hInput;
+                        y += vInput;
                     }
                 }
-            } else moveDestQueue.pop();
+            } else {
+                switch (moveDestination.pos) {
+                    case Local(_, _): {
+                        lx = destX;
+                        ly = destY;
+                    }
+                    case Relative(_, _): {
+                        rx = destX;
+                        ry = destY;
+                    }
+                    case World(_, _) | Entity(_, _, _): {
+                        x = destX;
+                        y = destY;
+                    }
+                };
+                moveDestQueue.pop();
+                if (moveDestination.cb != null) moveDestination.cb();
+            }
         }
         time += delta;
+    }
+
+    private override function fixedUpdate(dt: Float):Void {
+        if (player != null) {
+            final distance = (x - player.x) * (x - player.x) + (y - player.y) * (y - player.y);
+            if (mask & Types.CollisionLayers.Player == Types.CollisionLayers.Player &&
+                    (distance <= 0.0 ||
+                    distance <= (Const.PLAYER_HITBOX_RADIUS + radius) * (Const.PLAYER_HITBOX_RADIUS + radius)))
+                player.applyDamage();
+            else if (mask & Types.CollisionLayers.Graze == Types.CollisionLayers.Graze &&
+                    distance <= (Const.PLAYER_GRAZEBOX_RADIUS + radius) * (Const.PLAYER_GRAZEBOX_RADIUS + radius))
+                player.graze(cast this);
+            else grazeCount = 0;
+        }
     }
 
     private override function render():Void {
@@ -207,13 +238,19 @@ class Enemy extends Entity {
         throw 'Can\'t add event with time that is not in order!';
     }
 
-    private function setSprite(path: String):Void {
-        final tile = hxd.Res.load(path).toTile().center();
-        if (sprite.hasAnimation(0)) sprite.removeAnimation(0);
-        sprite.addAnimation(0, [ tile ], 1.0, true);
+    inline private function setSprite(path: String):Void {
+        sprite.load(path);
     }
 
-    private function moveToByTime(pos: EnemyPosition, time: Float):Void {
+    inline private function playAnimation(id: Int, start: Float = 0.0):Void {
+        sprite.play(id, start);
+    }
+
+    inline private function playAnimationOverride(id: Int, start: Float = 0.0):Void {
+        sprite.playOverride(id, start);
+    }
+
+    private function moveToByTime(pos: Types.Position, time: Float, ?cb: Void->Void):Void {
         var destX : Float;
         var destY : Float;
         var thisX : Float;
@@ -248,15 +285,15 @@ class Enemy extends Entity {
         var speed : Float = 0.0;
         if (distance > 0.0) speed = Math.sqrt(distance) / time;
         moveDestQueue.pop();
-        moveDestQueue.push({ pos: pos, speed: speed });
+        moveDestQueue.push({ pos: pos, speed: speed, cb: cb });
     }
 
-    private function moveToBySpeed(pos: EnemyPosition, speed: Float):Void {
+    private function moveToBySpeed(pos: Types.Position, speed: Float, ?cb: Void->Void):Void {
         moveDestQueue.pop();
-        moveDestQueue.push({ pos: pos, speed: speed });
+        moveDestQueue.push({ pos: pos, speed: speed, cb: cb });
     }
 
-    private function enqueueMoveToByTime(pos: EnemyPosition, time: Float):Void {
+    private function enqueueMoveToByTime(pos: Types.Position, time: Float, ?cb: Void->Void):Void {
         var destX : Float;
         var destY : Float;
         var thisX : Float;
@@ -290,11 +327,11 @@ class Enemy extends Entity {
         var distance = (destX - thisX) * (destX - thisX) + (destY - thisY) * (destY - thisY);
         var speed : Float = 0.0;
         if (distance > 0.0) speed = Math.sqrt(distance) / time;
-        moveDestQueue.add({ pos: pos, speed: speed });
+        moveDestQueue.add({ pos: pos, speed: speed, cb: cb });
     }
 
-    private function enqueueMoveToBySpeed(pos: EnemyPosition, speed: Float):Void {
-        moveDestQueue.add({ pos: pos, speed: speed });
+    private function enqueueMoveToBySpeed(pos: Types.Position, speed: Float, ?cb: Void->Void):Void {
+        moveDestQueue.add({ pos: pos, speed: speed, cb: cb });
     }
 
     private function nextMove():Void {
@@ -305,7 +342,7 @@ class Enemy extends Entity {
         moveDestQueue.clear();
     }
 
-    private function spawnEnemy(pos: EnemyPosition, script: String, health: Int):Void {
+    private function spawnEnemy(pos: Types.Position, script: String, health: Int):Void {
         var newX : Float;
         var newY : Float;
         switch (pos) {
@@ -329,6 +366,7 @@ class Enemy extends Entity {
         final enemy = scene.spawnEntity(newX, newY, Enemy);
         enemy.loadScript(script, preparedParams);
         enemy.parent = this;
+        children.push(enemy);
     }
 
     private function setPreparedParam(k: String, v: Any):Void {
