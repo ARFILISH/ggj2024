@@ -65,6 +65,10 @@ class Sprite extends Drawable {
         }
     }
 
+    inline public function hasAnimation(id: Int):Bool {
+        return animations.exists(id);
+    }
+
     public function play(id: Int, start: Float = 0.0):Void {
         if (current == id) return;
         if (!animations.exists(id)) throw 'Animation $id does not exist!';
@@ -95,6 +99,7 @@ class Sprite extends Drawable {
 	}
 
     private override function draw(ctx: RenderContext):Void {
+        if (current == -1) return;
         final tile = animations[current].getFrame(time);
         emitTile(ctx, tile);
 	}

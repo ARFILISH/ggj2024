@@ -14,6 +14,7 @@ class Main extends hxd.App {
     private var dontDestroy : Array<Entity>;
 
     private var fixedAccum : Float;
+    private var time : Float;
 
     private static function main():Void {
         new Main();
@@ -46,6 +47,7 @@ class Main extends hxd.App {
     }
 
     private override function update(dt: Float):Void {
+        time += dt;
         inputManager.update();
         fixedAccum += dt;
         for (ent in entities)
@@ -64,7 +66,7 @@ class Main extends hxd.App {
         for (ent in entities) if (!ent.markedForDeletion) ent.update(dt);
         var fixedDelta = 1.0 / Const.FIXED_FPS;
         for (i in 0...Const.FIXED_ITERATIONS) {
-            for (ent in entities) if (!ent.markedForDeletion) ent.update(fixedDelta);
+            for (ent in entities) if (!ent.markedForDeletion) ent.fixedUpdate(fixedDelta);
             if (fixedAccum >= fixedDelta) fixedAccum -= fixedDelta;
             else break;
         }
@@ -86,5 +88,9 @@ class Main extends hxd.App {
             else ent.destroy();
         }
         nextScene = scene;
+    }
+
+    inline public function getEntities():Iterator<Entity> {
+        return entities.iterator();
     }
 }

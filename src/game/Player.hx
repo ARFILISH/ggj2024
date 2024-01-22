@@ -34,7 +34,7 @@ class Player extends Entity {
         velX = 0.0;
         velY = 0.0;
         focusing = false;
-        invincibility = 5.0;
+        invincibility = 2.0;
     }
 
     private override function destroyed(s2d: h2d.Scene) {
