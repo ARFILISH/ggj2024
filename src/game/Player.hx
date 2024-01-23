@@ -1,5 +1,6 @@
 package game;
 
+import h2d.Particles;
 import h3d.Vector4;
 import h2d.Bitmap;
 import heaps.Sprite;
@@ -16,6 +17,8 @@ class Player extends Entity {
     public var velY : Float;
 
     private var sprite : Sprite;
+    private var grazeParticles : Particles;
+    private var grazeParticleSettings : Dynamic;
     private var hitboxSprite : Bitmap;
 
     private var invincibility : Float;
@@ -27,6 +30,9 @@ class Player extends Entity {
         sprite.load("sprites/game/sprPlayer.xml");
         sprite.addShader(new shaders.Blink(0, 0.17, Vector4.fromColor(0x00000000), 1.0));
         hitboxSprite = new Bitmap(hxd.Res.sprites.game.sprPlayerHitbox.toTile().center(), s2d);
+        grazeParticles = new Particles(s2d);
+        grazeParticles.onEnd = grazeParticles.removeGroup.bind(grazeParticles.getGroup("main"));
+        grazeParticleSettings = haxe.Json.parse(hxd.Res.particles.ptcPlayerGraze_json.entry.getText());
         velX = 0.0;
         velY = 0.0;
         focusing = false;
@@ -38,6 +44,8 @@ class Player extends Entity {
         sprite = null;
         hitboxSprite.remove();
         hitboxSprite = null;
+        grazeParticles.remove();
+        grazeParticles = null;
     }
 
     private override function preUpdate() {
@@ -66,19 +74,21 @@ class Player extends Entity {
         if (focusing) sprite.play(PlayerAnimation.Focus);
         else sprite.play(velX < 0.0 ? PlayerAnimation.Left : (velX > 0.0 ? PlayerAnimation.Right : PlayerAnimation.Forward));
         hitboxSprite.visible = focusing;
-        sprite.x = hitboxSprite.x = x;
-        sprite.y = hitboxSprite.y = y;
+        sprite.x = hitboxSprite.x = grazeParticles.x = x;
+        sprite.y = hitboxSprite.y = grazeParticles.y = y;
     }
 
     public function graze(by: { grazeCount : Int }):Void {
-        if (by.grazeCount < 5) {
+        if (by.grazeCount < 1) {
             by.grazeCount++;
-            trace("GRAZE!");
+            grazeParticles.load(grazeParticleSettings);
+            if (!AudioManager.instance.isPlaying(1)) AudioManager.instance.playSound(1, "sounds/sndPlayerGraze.wav");
         }
     }
 
     public function applyDamage():Void {
         if (invincibility > 0.0) return;
+        AudioManager.instance.playSound(0, "sounds/sndPlayerDamage.wav");
         invincibility = 2.0;
         x = Const.PLAYER_START_X;
         y = Const.PLAYER_START_Y;

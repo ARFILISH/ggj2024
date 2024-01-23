@@ -6,6 +6,7 @@ class Main extends hxd.App {
     public static var instance(default, null) : Main = null;
 
     private var inputManager : InputManager;
+    private var audioManager : AudioManager;
 
     public var scene(default, null) : Scene;
     private var nextScene : Scene;
@@ -28,13 +29,11 @@ class Main extends hxd.App {
         fixedAccum = 0.0;
     }
 
+    private override function loadAssets(onLoaded: Void->Void):Void {
+        new hxd.fmt.pak.Loader(this.s2d, onLoaded);
+    }
+
     private override function init():Void {
-        #if debug
-        hxd.Res.initLocal();
-        hxd.res.Resource.LIVE_UPDATE = true;
-        #else
-        hxd.Res.initPak();
-        #end
         s2d.scaleMode = LetterBox(320, 180, true, Center, Center);
         inputManager = new InputManager();
         inputManager.addAction(Types.InputActions.MoveUp, [ InputManager.ActionInput.Down(hxd.Key.UP) ]);
@@ -43,6 +42,7 @@ class Main extends hxd.App {
         inputManager.addAction(Types.InputActions.MoveLeft, [ InputManager.ActionInput.Down(hxd.Key.LEFT) ]);
         inputManager.addAction(Types.InputActions.Focus, [ InputManager.ActionInput.Down(hxd.Key.SHIFT) ]);
         inputManager.addAction(Types.InputActions.Shoot, [ InputManager.ActionInput.Pressed(hxd.Key.Z) ]);
+        audioManager = new AudioManager();
         changeScene(Playfield, []);
     }
 

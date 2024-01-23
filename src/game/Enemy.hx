@@ -24,17 +24,17 @@ class Enemy extends Entity {
     private var sprite : Sprite;
 
     private var lx(get, set) : Float;
-        inline private function get_lx():Float return x - (parent != null ? parent.x : Const.ENEMY_BASE_X);
-        inline private function set_lx(val: Float):Float return x = (parent != null ? parent.x : Const.ENEMY_BASE_X) + val;
+        @:keep inline private function get_lx():Float return x - (parent != null ? parent.x : Const.ENEMY_BASE_X);
+        @:keep inline private function set_lx(val: Float):Float return x = (parent != null ? parent.x : Const.ENEMY_BASE_X) + val;
     private var ly(get, set) : Float;
-        inline private function get_ly():Float return y - (parent != null ? parent.y : Const.ENEMY_BASE_Y);
-        inline private function set_ly(val: Float):Float return y = (parent != null ? parent.x : Const.ENEMY_BASE_Y) + val;
+        @:keep inline private function get_ly():Float return y - (parent != null ? parent.y : Const.ENEMY_BASE_Y);
+        @:keep inline private function set_ly(val: Float):Float return y = (parent != null ? parent.x : Const.ENEMY_BASE_Y) + val;
     private var rx(get, set) : Float;
-        inline private function get_rx():Float return x - Const.ENEMY_BASE_X;
-        inline private function set_rx(val: Float):Float return x = Const.ENEMY_BASE_X + val;
+        @:keep inline private function get_rx():Float return x - Const.ENEMY_BASE_X;
+        @:keep inline private function set_rx(val: Float):Float return x = Const.ENEMY_BASE_X + val;
     private var ry(get, set) : Float;
-        inline private function get_ry():Float return y - Const.ENEMY_BASE_Y;
-        inline private function set_ry(val: Float):Float return y = Const.ENEMY_BASE_Y + val;
+        @:keep inline private function get_ry():Float return y - Const.ENEMY_BASE_Y;
+        @:keep inline private function set_ry(val: Float):Float return y = Const.ENEMY_BASE_Y + val;
 
     private var events : List<EnemyEvent>;
     private var time : Float;
@@ -254,7 +254,7 @@ class Enemy extends Entity {
         sprite.y = y;
     }
 
-    private function addEvent(time: Float, cb: Void->Void):Void {
+    @:keep private function addEvent(time: Float, cb: Void->Void):Void {
         final event = { time: time, cb: cb };
         if (events.length == 0) {
             events.add(event);
@@ -271,11 +271,11 @@ class Enemy extends Entity {
         throw 'Can\'t add event with time that is not in order!';
     }
 
-    inline private function setSprite(path: String):Void {
+    @:keep inline private function setSprite(path: String):Void {
         sprite.load(path);
     }
 
-    inline private function playAnimation(id: Int, start: Float = 0.0):Void {
+    @:keep inline private function playAnimation(id: Int, start: Float = 0.0):Void {
         sprite.play(id, start);
     }
 

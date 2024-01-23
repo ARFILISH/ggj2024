@@ -7,6 +7,6 @@ class Playfield extends Scene {
         spawnEntity(Const.PLAYER_START_X, Const.PLAYER_START_Y, Player);
         mainEnemy = spawnEntity(160.0, 0.0, Enemy);
         mainEnemy.tag = "main";
-        mainEnemy.loadScript("data/levels/level_01.hs");
+        mainEnemy.loadScript("data/levels/level_01.hscript");
     }
 }

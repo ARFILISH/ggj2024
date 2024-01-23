@@ -14,11 +14,11 @@ enum abstract CollisionLayers(Int) from Int to Int {
     final Enemy = 8;
 }
 
-enum Position {
+@:keep enum Position {
     Local(x : Float, y : Float);
     Relative(x : Float, y : Float);
     World(x : Float, y : Float);
-    Entity(ent : Entity, x : Float, y : Float);
+    Entity(ent : Entity, ?x : Float, ?y : Float);
 }
 
 enum BulletMoveType {

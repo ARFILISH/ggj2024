@@ -2,11 +2,16 @@
 
 -lib heaps
 -lib hscript
--lib hldx
 
+--each
+
+-hl build.pak.hl
+-m hxd.fmt.pak.Build
+
+--cmd hl build.pak.hl -out build/res
+
+--next
+
+-js build/game.js
 -m Main
-
--D windowSize=1280x720
-
--hl build/game.hl
---debug
+--dce std

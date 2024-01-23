@@ -38,7 +38,7 @@ class BulletManager extends Entity {
     public var speedB : Float;
     public var radiusA : Float;
     public var radiusB : Float;
-    public var moveType : Types.BulletMoveType;
+    @:keep public var moveType : Types.BulletMoveType;
 
     private var tiles : Array<Tile>;
     public var bulletType : Int;
@@ -48,7 +48,7 @@ class BulletManager extends Entity {
 
     private override function added(s2d: h2d.Scene) {
         batch = new SpriteBatch(null, s2d);
-        batch.hasUpdate = true;
+        batch.hasRotationScale = true;
         tiles = new Array();
         aim = Types.BulletAim.Fan;
         countA = countB = 1;
@@ -119,8 +119,8 @@ class BulletManager extends Entity {
                             thisY = b.y;
                         }
                         case Entity(ent, x, y): {
-                            destX = ent.x + x;
-                            destY = ent.y + y;
+                            destX = ent.x + (x ?? 0.0);
+                            destY = ent.y + (y ?? 0.0);
                             thisX = b.x;
                             thisY = b.y;
                         }
@@ -128,8 +128,8 @@ class BulletManager extends Entity {
                     vx = destX - thisX;
                     vy = destY - thisY;
                     var length = vx * vx + vy * vy;
-                    if (length > 0.0 && Math.sqrt(length) > speed) {
-                        length = Math.sqrt(length); 
+                    if (length > 0.0 && hxd.Math.sqrt(length) > speed) {
+                        length = hxd.Math.sqrt(length); 
                         vx /= length;
                         vy /= length;
                         b.rotation = Math.atan2(vy, vx);
