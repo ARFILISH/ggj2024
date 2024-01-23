@@ -2,4 +2,14 @@
     <source>sprites/game/sprBullets01.png</source>
     <tile src="0" x="0" y="0" width="8" height="8"/>
     <tile src="0" x="8" y="0" width="8" height="8"/>
+    <tile src="0" x="0" y="8" width="8" height="8"/>
+    <tile src="0" x="8" y="8" width="8" height="8"/>
+    <tile src="0" x="0" y="16" width="8" height="8"/>
+    <tile src="0" x="8" y="16" width="8" height="8"/>
+    <tile src="0" x="0" y="24" width="8" height="8"/>
+    <tile src="0" x="8" y="24" width="8" height="8"/>
+    <tile src="0" x="0" y="32" width="8" height="8"/>
+    <tile src="0" x="8" y="32" width="8" height="8"/>
+    <tile src="0" x="0" y="40" width="8" height="8"/>
+    <tile src="0" x="8" y="40" width="8" height="8"/>
 </bullets>

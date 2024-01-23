@@ -194,13 +194,13 @@ class BulletManager extends Entity {
         switch (aim) {
             case EntityFan(ent): {
                 final stepT = 1.0 / countB;
-                final baseAngle = MathUtils.angleBetween(parent.x, parent.y, ent.x, ent.y) - Math.PI + angleA +
-                    angleB * Std.int(countB / 2);
+                final baseAngle = MathUtils.angleBetween(parent.x, parent.y, ent.x, ent.y) - Math.PI + angleA
+                    - angleB * Math.ffloor(countA * 0.5) - angleB * (countA % 2 - 1) * 0.5;
                 for (i in 0...countA)
                     for (j in 0...countB) {
-                        final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
+                        final speed = hxd.Math.lerp(speedA, speedB, stepT * j);
                         final rotation = baseAngle + angleB * i;
-                        final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
+                        final radius = hxd.Math.lerp(radiusA, radiusB, stepT * j);
                         final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
@@ -211,11 +211,12 @@ class BulletManager extends Entity {
             }
             case Fan: {
                 final stepT = 1.0 / countB;
+                final baseAngle = angleA - angleB * Math.ffloor(countA * 0.5) - angleB * (countA % 2 - 1) * 0.5;
                 for (i in 0...countA)
                     for (j in 0...countB) {
-                        final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
-                        final rotation = angleA * i + angleB * i;
-                        final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
+                        final speed = hxd.Math.lerp(speedA, speedB, stepT * j);
+                        final rotation = baseAngle + angleB * i;
+                        final radius = hxd.Math.lerp(radiusA, radiusB, stepT * j);
                         final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
@@ -227,13 +228,13 @@ class BulletManager extends Entity {
             case EntityCircle(ent): {
                 final angleStep = 2.0 * hxd.Math.PI / countA;
                 final stepT = 1.0 / countB;
-                final baseAngle = MathUtils.angleBetween(parent.x, parent.y, ent.x, ent.y) - Math.PI + angleA +
-                    angleB * Std.int(countA / 2);
+                final baseAngle = MathUtils.angleBetween(parent.x, parent.y, ent.x, ent.y) - Math.PI + angleA
+                    - angleB * Math.ffloor(countA * 0.5) - angleB * (countA % 2 - 1) * 0.5;
                 for (i in 0...countA)
                     for (j in 0...countB) {
-                        final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
+                        final speed = hxd.Math.lerp(speedA, speedB, stepT * j);
                         final rotation = baseAngle + angleStep * i + angleB * j;
-                        final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
+                        final radius = hxd.Math.lerp(radiusA, radiusB, stepT * j);
                         final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
@@ -248,9 +249,9 @@ class BulletManager extends Entity {
                 final stepT = 1.0 / countB;
                 for (i in 0...countA)
                     for (j in 0...countB) {
-                        final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
+                        final speed = hxd.Math.lerp(speedA, speedB, stepT * j);
                         final rotation = (angleStep + angleA) * i + angleB * j;
-                        final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
+                        final radius = hxd.Math.lerp(radiusA, radiusB, stepT * j);
                         final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
@@ -264,9 +265,9 @@ class BulletManager extends Entity {
                 final stepT = 1.0 / countB;
                 for (i in 0...countA)
                     for (j in 0...countB) {
-                        final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
+                        final speed = hxd.Math.lerp(speedA, speedB, stepT * j);
                         final rotation = angleA + (hxd.Math.random(angleB * 2.0) - angleB) * i;
-                        final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
+                        final radius = hxd.Math.lerp(radiusA, radiusB, stepT * j);
                         final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
@@ -283,7 +284,7 @@ class BulletManager extends Entity {
                     for (j in 0...countB) {
                         final speed = (hxd.Math.random(speedB - speedA) + speedA);
                         final rotation = (angleStep + angleA) * i + angleB * j;
-                        final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
+                        final radius = hxd.Math.lerp(radiusA, radiusB, stepT * j);
                         final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
@@ -299,7 +300,7 @@ class BulletManager extends Entity {
                     for (j in 0...countB) {
                         final speed = (hxd.Math.random(speedB - speedA) + speedA);
                         final rotation = angleA + (hxd.Math.random(angleB * 2.0) - angleB) * i;
-                        final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
+                        final radius = hxd.Math.lerp(radiusA, radiusB, stepT * j);
                         final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
