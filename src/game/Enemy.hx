@@ -57,6 +57,7 @@ class Enemy extends Entity {
         time = 0.0;
         events = new List();
         moveDestQueue = new List();
+        bulletManagers = new Map();
         player = scene.getEntity(Player);
         radius = 0.0;
         mask = 0;
@@ -72,6 +73,11 @@ class Enemy extends Entity {
             parent.children.remove(this);
             parent = null;
         }
+        for (m in bulletManagers) {
+            if (m.destroyWithParent) m.destroy();
+            else m.parent = null;
+        }
+        bulletManagers.clear();
         for (c in children) c.destroy();
         children = null;
         grazeCount = 0;
@@ -113,10 +119,37 @@ class Enemy extends Entity {
         interp.variables["stopMoving"] = stopMoving;
         interp.variables["setPreparedParam"] = setPreparedParam;
         interp.variables["clearPreparedParams"] = clearPreparedParams;
+        interp.variables["createBulletManager"] = createBulletManager;
+        interp.variables["destroyBulletManager"] = destroyBulletManager;
+        interp.variables["freeBulletManager"] = freeBulletManager;
+        interp.variables["loadBulletManagerBullets"] = loadBulletManagerBullets;
+        interp.variables["setBulletManagerTile"] = setBulletManagerTile;
+        interp.variables["setBulletManagerAutoDestroy"] = setBulletManagerAutoDestroy;
+        interp.variables["setBulletManagerDestroyWithParent"] = setBulletManagerDestroyWithParent;
+        interp.variables["setBulletManagerAimType"] = setBulletManagerAimType;
+        interp.variables["setBulletManagerCount"] = setBulletManagerCount;
+        interp.variables["setBulletManagerAngle"] = setBulletManagerAngle;
+        interp.variables["setBulletManagerSpeed"] = setBulletManagerSpeed;
+        interp.variables["setBulletManagerRadius"] = setBulletManagerRadius;
+        interp.variables["setBulletManagerHitmask"] = setBulletManagerHitmask;
+        interp.variables["setBulletManagerHitRadius"] = setBulletManagerHitRadius;
+        interp.variables["setBulletManagerMoveType"] = setBulletManagerMoveType;
+        interp.variables["bulletManagerShoot"] = bulletManagerShoot;
         interp.variables["LocalSpace"] = Types.Position.Local;
         interp.variables["RelativeSpace"] = Types.Position.Relative;
         interp.variables["WorldSpace"] = Types.Position.World;
         interp.variables["EntitySpace"] = Types.Position.Entity;
+        interp.variables["MoveTypeStop"] = Types.BulletMoveType.Stop;
+        interp.variables["MoveTypeFixed"] = Types.BulletMoveType.Fixed;
+        interp.variables["MoveTypePosition"] = Types.BulletMoveType.Position;
+        interp.variables["AimEntityFan"] = Types.BulletAim.EntityFan;
+        interp.variables["AimFan"] = Types.BulletAim.Fan;
+        interp.variables["AimEntityCircle"] = Types.BulletAim.EntityCircle;
+        interp.variables["AimCircle"] = Types.BulletAim.Circle;
+        interp.variables["AimRandomFan"] = Types.BulletAim.RandomFan;
+        interp.variables["AimRandomCircle"] = Types.BulletAim.RandomCircle;
+        interp.variables["AimTotallyRandomFan"] = Types.BulletAim.TotallyRandomFan;
+        interp.variables["Math"] = hxd.Math;
         if (params != null) for (k => v in params) interp.variables[k] = v;
         interp.execute(ast);
     }
@@ -206,7 +239,7 @@ class Enemy extends Entity {
         if (player != null) {
             final distance = (x - player.x) * (x - player.x) + (y - player.y) * (y - player.y);
             if (mask & Types.CollisionLayers.Player == Types.CollisionLayers.Player &&
-                    (distance <= 0.0 ||
+                    (distance == 0.0 ||
                     distance <= (Const.PLAYER_HITBOX_RADIUS + radius) * (Const.PLAYER_HITBOX_RADIUS + radius)))
                 player.applyDamage();
             else if (mask & Types.CollisionLayers.Graze == Types.CollisionLayers.Graze &&
@@ -378,5 +411,94 @@ class Enemy extends Entity {
         if (preparedParams == null) throw "Prepared params do not exist!";
         preparedParams.clear();
         preparedParams = null;
+    }
+
+    private function createBulletManager(idx: Int):Void {
+        if (bulletManagers.exists(idx)) bulletManagers[idx].parent = null;
+        final mgr = scene.spawnEntity(x, y, BulletManager);
+        mgr.parent = this;
+        bulletManagers[idx] = mgr;
+        mgr.player = player;
+    }
+
+    private function destroyBulletManager(idx: Int):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].destroy();
+        bulletManagers.remove(idx);
+    }
+
+    private function freeBulletManager(idx: Int):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].parent = null;
+        bulletManagers.remove(idx);
+    }
+
+    private function loadBulletManagerBullets(idx: Int, path: String):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].load(path);
+    }
+
+    private function setBulletManagerTile(idx: Int, tile: Int):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].bulletType = tile;
+    }
+
+    private function setBulletManagerAutoDestroy(idx: Int, ad: Bool):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].autoDestroy = ad;
+    }
+
+    private function setBulletManagerDestroyWithParent(idx: Int, dwp: Bool):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].destroyWithParent = dwp;
+    }
+
+    private function setBulletManagerAimType(idx: Int, aim: Types.BulletAim):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].aim = aim;
+    }
+
+    private function setBulletManagerCount(idx: Int, countA: Int, countB: Int):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].countA = countA;
+        bulletManagers[idx].countB = countB;
+    }
+
+    private function setBulletManagerAngle(idx: Int, angleA: Float, angleB: Float):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].angleA = angleA;
+        bulletManagers[idx].angleB = angleB;
+    }
+
+    private function setBulletManagerSpeed(idx: Int, speedA: Float, speedB: Float):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].speedA = speedA;
+        bulletManagers[idx].speedB = speedB;
+    }
+
+    private function setBulletManagerRadius(idx: Int, radiusA: Float, radiusB: Float):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].radiusA = radiusA;
+        bulletManagers[idx].radiusB = radiusB;
+    }
+
+    private function setBulletManagerMoveType(idx: Int, moveType: Types.BulletMoveType):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].moveType = moveType;
+    }
+
+    private function setBulletManagerHitmask(idx: Int, mask: Int):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].hitmask = mask;
+    }
+
+    private function setBulletManagerHitRadius(idx: Int, radius: Float):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].hitRadius = radius;
+    }
+
+    private function bulletManagerShoot(idx: Int):Void {
+        if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
+        bulletManagers[idx].shoot();
     }
 }

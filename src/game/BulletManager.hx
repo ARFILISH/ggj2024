@@ -1,91 +1,33 @@
 package game;
 
 import h2d.Tile;
-import h2d.Object;
 import h2d.SpriteBatch;
 
-class Bullet extends BatchElement {
+private class Bullet extends BatchElement {
+    private var manager : BulletManager;
     public var speed : Float;
     public var grazeCount : Int;
     public var radius : Float;
 
-    public function new(t: Tile, speed: Float, rotation: Float):Void {
+    public function new(t: Tile, manager: BulletManager, speed: Float, rotation: Float, radius: Float):Void {
+        super(t);
+        this.manager = manager;
+        this.radius = radius;
         this.rotation = rotation;
         this.speed = speed;
         grazeCount = 0;
-        super(t);
     }
-
-    private override function update(delta: Float):Bool {
-        if (x < Const.PLAYFIELD_PLAYABLE_LEFT - t.dx || x > Const.PLAYFIELD_PLAYABLE_RIGHT + t.dx ||
-                y < Const.PLAYFIELD_PLAYABLE_TOP + t.dy || x > Const.PLAYFIELD_PLAYABLE_BOTTOM + t.dx)
-            return false;
-        final mgr : BulletManager = cast batch;
-        final speed = this.speed * delta;
-        var vx : Float = 0.0;
-        var vy : Float = 0.0;
-        switch (mgr.moveType) {
-            case Stop: { }
-            case Fixed(rotSpeed): {
-                rotation += rotSpeed() * delta;
-                vx = Math.acos(rotation);
-                vy = Math.asin(rotation);
-            }
-            case Position(pos): {
-                var destX : Float;
-                var destY : Float;
-                var thisX : Float;
-                var thisY : Float;
-                switch (pos) {
-                    case Local(x, y): {
-                        destX = x;
-                        destY = y;
-                        thisX = this.x - mgr.owner.x;
-                        thisY = this.y - mgr.owner.y;
-                    }
-                    case Relative(x, y): {
-                        destX = x;
-                        destY = y;
-                        thisX = this.x - Const.ENEMY_BASE_X;
-                        thisY = this.y - Const.ENEMY_BASE_Y;
-                    }
-                    case World(x, y): {
-                        destX = x;
-                        destY = y;
-                        thisX = this.x;
-                        thisY = this.y;
-                    }
-                    case Entity(ent, x, y): {
-                        destX = ent.x + x;
-                        destY = ent.y + y;
-                        thisX = this.x;
-                        thisY = this.y;
-                    }
-                };
-                vx = destX - thisX;
-                vy = destY - thisY;
-                var length = vx * vx + vy * vy;
-                if (length > 0.0 && Math.sqrt(length) > speed) {
-                    length = Math.sqrt(length); 
-                    vx /= length;
-                    vy /= length;
-                    rotation = Math.atan2(vy, vx);
-                } else {
-                    vx = 0.0;
-                    vy = 0.0;
-                }
-            }
-        }
-        x += vx * speed;
-        y += vy * speed;
-		return true;
-	}
 }
 
-class BulletManager extends SpriteBatch {
-    public var owner(default, null) : Enemy;
+class BulletManager extends Entity {
+    @:allow(game.Enemy)
+    public var parent(default, null) : Enemy;
 
-    private var idx : Int;
+    public var destroyWithParent : Bool;
+    public var autoDestroy : Bool;
+
+    private var batch : SpriteBatch;
+    public var player : Player;
 
     public var aim : Types.BulletAim;
     public var countA : Int;
@@ -101,30 +43,123 @@ class BulletManager extends SpriteBatch {
     private var tiles : Array<Tile>;
     public var bulletType : Int;
 
-    public var mask : Int;
-    public var radius : Float;
+    public var hitmask : Int;
+    public var hitRadius : Float;
 
-    public function new(owner: Enemy, idx: Int, parent: Object) {
-        this.idx = idx;
-        super(null, parent);
+    private override function added(s2d: h2d.Scene) {
+        batch = new SpriteBatch(null, s2d);
+        batch.hasUpdate = true;
         tiles = new Array();
-        hasUpdate = true;
+        aim = Types.BulletAim.Fan;
+        countA = countB = 1;
+        angleA = angleB = 0.0;
+        speedA = speedB = 0.0;
+        radiusA = radiusB = 0.0;
+        moveType = Types.BulletMoveType.Fixed();
+        destroyWithParent = false;
+        bulletType = -1;
+        autoDestroy = true;
     }
 
-    public function fixedUpdate(delta: Float):Void {
-        if (owner.player == null) return;
-        for (e in getElements()) {
+    private override function destroyed(s2d: h2d.Scene) {
+        batch.clear();
+        batch.remove();
+        tiles.resize(0);
+        tiles = null;
+    }
+
+    @:allow(game.BulletManager.Bullet)
+    private function bulletRemoved():Void {
+        if (parent == null && batch.isEmpty()) destroy();
+    }
+
+    private override function update(delta: Float):Void {
+        for (e in batch.getElements()) {
             final b : Bullet = cast e;
-            final distance = (b.x - owner.player.x) * (b.x - owner.player.x) + (b.y - owner.player.y) * (b.y - owner.player.y);
-            if (mask & Types.CollisionLayers.Player == Types.CollisionLayers.Player &&
-                    (distance <= 0.0 ||
-                    distance <= (Const.PLAYER_HITBOX_RADIUS + b.radius) * (Const.PLAYER_HITBOX_RADIUS + b.radius))) {
-                owner.player.applyDamage();
+            if ((parent == null || autoDestroy) &&
+                    (b.x < Const.PLAYFIELD_PLAYABLE_LEFT + b.t.dx || b.x > Const.PLAYFIELD_PLAYABLE_RIGHT - b.t.dx ||
+                    b.y < Const.PLAYFIELD_PLAYABLE_TOP + b.t.dy || b.y > Const.PLAYFIELD_PLAYABLE_BOTTOM - b.t.dy
+                    )) {
                 b.remove();
+                bulletRemoved();
+                continue;
             }
-            else if (mask & Types.CollisionLayers.Graze == Types.CollisionLayers.Graze &&
+            final speed = b.speed * delta;
+            var vx : Float = 0.0;
+            var vy : Float = 0.0;
+            switch (moveType) {
+                case Stop: { }
+                case Fixed(rotSpeed): {
+                    if (rotSpeed != null) b.rotation += rotSpeed() * delta;
+                    vx = Math.cos(b.rotation);
+                    vy = Math.sin(b.rotation);
+                }
+                case Position(pos): {
+                    var destX : Float;
+                    var destY : Float;
+                    var thisX : Float;
+                    var thisY : Float;
+                    switch (pos) {
+                        case Local(x, y): {
+                            destX = x;
+                            destY = y;
+                            thisX = b.x - parent.x ?? 0.0;
+                            thisY = b.y - parent.y ?? 0.0;
+                        }
+                        case Relative(x, y): {
+                            destX = x;
+                            destY = y;
+                            thisX = b.x - Const.ENEMY_BASE_X;
+                            thisY = b.y - Const.ENEMY_BASE_Y;
+                        }
+                        case World(x, y): {
+                            destX = x;
+                            destY = y;
+                            thisX = b.x;
+                            thisY = b.y;
+                        }
+                        case Entity(ent, x, y): {
+                            destX = ent.x + x;
+                            destY = ent.y + y;
+                            thisX = b.x;
+                            thisY = b.y;
+                        }
+                    };
+                    vx = destX - thisX;
+                    vy = destY - thisY;
+                    var length = vx * vx + vy * vy;
+                    if (length > 0.0 && Math.sqrt(length) > speed) {
+                        length = Math.sqrt(length); 
+                        vx /= length;
+                        vy /= length;
+                        b.rotation = Math.atan2(vy, vx);
+                    } else {
+                        vx = 0.0;
+                        vy = 0.0;
+                    }
+                }
+            }
+            b.x += vx * speed;
+            b.y += vy * speed;
+        }
+    }
+
+    private override function fixedUpdate(delta: Float):Void {
+        if (player == null) return;
+        for (e in batch.getElements()) {
+            final b : Bullet = cast e;
+            final distance = (b.x - player.x) * (b.x - player.x) + (b.y - player.y) * (b.y - player.y);
+            if (hitmask & Types.CollisionLayers.Player == Types.CollisionLayers.Player &&
+                    (distance == 0.0 ||
+                    distance <= (Const.PLAYER_HITBOX_RADIUS + b.radius) * (Const.PLAYER_HITBOX_RADIUS + b.radius)
+                    )) {
+                player.applyDamage();
+                b.remove();
+                bulletRemoved();
+            }
+            else if (hitmask & Types.CollisionLayers.Graze == Types.CollisionLayers.Graze &&
                     distance <= (Const.PLAYER_GRAZEBOX_RADIUS + b.radius) * (Const.PLAYER_GRAZEBOX_RADIUS + b.radius))
-                owner.player.graze(cast b);
+                player.graze(cast b);
             else b.grazeCount = 0;
         }
     }
@@ -141,7 +176,8 @@ class BulletManager extends SpriteBatch {
         }
         if (sources.length == 0) return;
         for (el in xmlTree.elementsNamed("tile")) {
-            final src = Std.parseInt(el.get("src" ?? "0"));
+            var src = Std.parseInt(el.get("src") ?? "0");
+            if (src >= sources.length) src = 0;
             final x = Std.parseFloat(el.get("x") ?? "0");
             final y = Std.parseFloat(el.get("y") ?? "0");
             var width = Std.parseFloat(el.get("width") ?? '${sources[src].width}');
@@ -154,31 +190,23 @@ class BulletManager extends SpriteBatch {
     }
 
     public function shoot():Void {
-        if (tiles.length == 0) return;
+        if (tiles.length == 0 || bulletType < 0 || bulletType >= tiles.length) return;
         switch (aim) {
             case EntityFan(ent): {
                 final stepT = 1.0 / countB;
-                var distX = ent.x - owner.x;
-                var distY = ent.y - owner.y;
-                var length = distX * distX + distY * distY;
-                var baseAngle = angleA;
-                if (length > 0.0) {
-                    length = Math.sqrt(length);
-                    distX /= length;
-                    distY /= length;
-                    baseAngle += Math.atan2(distY, distX);
-                }
+                final baseAngle = MathUtils.angleBetween(parent.x, parent.y, ent.x, ent.y) - Math.PI + angleA +
+                    angleB * Std.int(countB / 2);
                 for (i in 0...countA)
                     for (j in 0...countB) {
                         final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
-                        final rotation = baseAngle * i + angleB * j;
+                        final rotation = baseAngle + angleB * i;
                         final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
-                        final bullet = new Bullet(tiles[bulletType % tiles.length], speed, rotation);
+                        final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
-                        add(bullet);
-                        bullet.x = (owner.x ?? 0.0) + xOff;
-                        bullet.y = (owner.y ?? 0.0) + yOff;
+                        batch.add(bullet);
+                        bullet.x = (parent.x ?? 0.0) + xOff;
+                        bullet.y = (parent.y ?? 0.0) + yOff;
                     }
             }
             case Fan: {
@@ -186,40 +214,33 @@ class BulletManager extends SpriteBatch {
                 for (i in 0...countA)
                     for (j in 0...countB) {
                         final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
-                        final rotation = angleA * i + angleB * j;
+                        final rotation = angleA * i + angleB * i;
                         final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
-                        final bullet = new Bullet(tiles[bulletType % tiles.length], speed, rotation);
+                        final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
-                        add(bullet);
-                        bullet.x = (owner.x ?? 0.0) + xOff;
-                        bullet.y = (owner.y ?? 0.0) + yOff;
+                        batch.add(bullet);
+                        bullet.x = (parent.x ?? 0.0) + xOff;
+                        bullet.y = (parent.y ?? 0.0) + yOff;
                     }
             }
             case EntityCircle(ent): {
                 final angleStep = 2.0 * hxd.Math.PI / countA;
                 final stepT = 1.0 / countB;
-                var distX = ent.x - owner.x;
-                var distY = ent.y - owner.y;
-                var length = distX * distX + distY * distY;
-                var baseAngle = angleA;
-                if (length > 0.0) {
-                    length = Math.sqrt(length);
-                    distX /= length;
-                    distY /= length;
-                    baseAngle += Math.atan2(distY, distX);
-                }
+                final baseAngle = MathUtils.angleBetween(parent.x, parent.y, ent.x, ent.y) - Math.PI + angleA +
+                    angleB * Std.int(countA / 2);
                 for (i in 0...countA)
                     for (j in 0...countB) {
                         final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
-                        final rotation = (angleStep + baseAngle) * i + angleB * j;
+                        final rotation = baseAngle + angleStep * i + angleB * j;
                         final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
-                        final bullet = new Bullet(tiles[bulletType % tiles.length], speed, rotation);
+                        final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
-                        add(bullet);
-                        bullet.x = (owner.x ?? 0.0) + xOff;
-                        bullet.y = (owner.y ?? 0.0) + yOff;
+                        batch.add(bullet);
+                        bullet.scale = 1.0;
+                        bullet.x = (parent.x ?? 0.0) + xOff;
+                        bullet.y = (parent.y ?? 0.0) + yOff;
                     }
             }
             case Circle: {
@@ -230,12 +251,13 @@ class BulletManager extends SpriteBatch {
                         final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
                         final rotation = (angleStep + angleA) * i + angleB * j;
                         final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
-                        final bullet = new Bullet(tiles[bulletType % tiles.length], speed, rotation);
+                        final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
-                        add(bullet);
-                        bullet.x = (owner.x ?? 0.0) + xOff;
-                        bullet.y = (owner.y ?? 0.0) + yOff;
+                        batch.add(bullet);
+                        bullet.scale = 1.0;
+                        bullet.x = (parent.x ?? 0.0) + xOff;
+                        bullet.y = (parent.y ?? 0.0) + yOff;
                     }
             }
             case RandomFan: {
@@ -243,14 +265,15 @@ class BulletManager extends SpriteBatch {
                 for (i in 0...countA)
                     for (j in 0...countB) {
                         final speed = hxd.Math.lerp(speedB, speedA, stepT * j);
-                        final rotation = angleB * i + (hxd.Math.random(angleA * 2.0) - angleA) * j;
+                        final rotation = angleA + (hxd.Math.random(angleB * 2.0) - angleB) * i;
                         final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
-                        final bullet = new Bullet(tiles[bulletType % tiles.length], speed, rotation);
+                        final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
-                        add(bullet);
-                        bullet.x = (owner.x ?? 0.0) + xOff;
-                        bullet.y = (owner.y ?? 0.0) + yOff;
+                        batch.add(bullet);
+                        bullet.scale = 1.0;
+                        bullet.x = (parent.x ?? 0.0) + xOff;
+                        bullet.y = (parent.y ?? 0.0) + yOff;
                     }
             }
             case RandomCircle: {
@@ -258,30 +281,32 @@ class BulletManager extends SpriteBatch {
                 final stepT = 1.0 / countB;
                 for (i in 0...countA)
                     for (j in 0...countB) {
-                        final speed = speedB + (hxd.Math.random(speedA * 2.0) - speedA) * j;
+                        final speed = (hxd.Math.random(speedB - speedA) + speedA);
                         final rotation = (angleStep + angleA) * i + angleB * j;
                         final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
-                        final bullet = new Bullet(tiles[bulletType % tiles.length], speed, rotation);
+                        final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
-                        add(bullet);
-                        bullet.x = (owner.x ?? 0.0) + xOff;
-                        bullet.y = (owner.y ?? 0.0) + yOff;
+                        batch.add(bullet);
+                        bullet.scale = 1.0;
+                        bullet.x = (parent.x ?? 0.0) + xOff;
+                        bullet.y = (parent.y ?? 0.0) + yOff;
                     }
             }
             case TotallyRandomFan: {
                 final stepT = 1.0 / countB;
                 for (i in 0...countA)
                     for (j in 0...countB) {
-                        final speed = speedB + (hxd.Math.random(speedA * 2.0) - speedA) * j;
-                        final rotation = angleB * i + (hxd.Math.random(angleA * 2.0) - angleA) * j;
+                        final speed = (hxd.Math.random(speedB - speedA) + speedA);
+                        final rotation = angleA + (hxd.Math.random(angleB * 2.0) - angleB) * i;
                         final radius = hxd.Math.lerp(radiusB, radiusA, stepT * j);
-                        final bullet = new Bullet(tiles[bulletType % tiles.length], speed, rotation);
+                        final bullet = new Bullet(tiles[bulletType], this, speed, rotation, hitRadius);
                         final xOff = radius * Math.cos(rotation);
                         final yOff = radius * Math.sin(rotation);
-                        add(bullet);
-                        bullet.x = (owner.x ?? 0.0) + xOff;
-                        bullet.y = (owner.y ?? 0.0) + yOff;
+                        batch.add(bullet);
+                        bullet.scale = 1.0;
+                        bullet.x = (parent.x ?? 0.0) + xOff;
+                        bullet.y = (parent.y ?? 0.0) + yOff;
                     }
             }
         }

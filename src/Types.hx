@@ -11,7 +11,7 @@ enum abstract CollisionLayers(Int) from Int to Int {
     final Player = 1;
     final Graze = 2;
     final Bullet = 4;
-    final Enemy = 4;
+    final Enemy = 8;
 }
 
 enum Position {
@@ -23,7 +23,7 @@ enum Position {
 
 enum BulletMoveType {
     Stop;
-    Fixed(rotSpeed : Void->Float);
+    Fixed(?rotSpeed : Void->Float);
     Position(pos : Types.Position);
 }
 
