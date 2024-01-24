@@ -4,14 +4,12 @@ import h2d.Tile;
 import h2d.SpriteBatch;
 
 private class Bullet extends BatchElement {
-    private var manager : BulletManager;
     public var speed : Float;
     public var grazeCount : Int;
     public var radius : Float;
 
     public function new(t: Tile, manager: BulletManager, speed: Float, rotation: Float, radius: Float):Void {
         super(t);
-        this.manager = manager;
         this.radius = radius;
         this.rotation = rotation;
         this.speed = speed;
@@ -47,7 +45,8 @@ class BulletManager extends Entity {
     public var hitRadius : Float;
 
     private override function added(s2d: h2d.Scene) {
-        batch = new SpriteBatch(null, s2d);
+        batch = new SpriteBatch(null);
+        s2d.add(batch, 3);
         batch.hasRotationScale = true;
         tiles = new Array();
         aim = Types.BulletAim.Fan;
@@ -142,19 +141,16 @@ class BulletManager extends Entity {
     }
 
     private override function fixedUpdate(delta: Float):Void {
-        if (player == null) return;
+        if (player == null || !player.isAlive()) return;
         for (e in batch.getElements()) {
             final b : Bullet = cast e;
             final distance = (b.x - player.x) * (b.x - player.x) + (b.y - player.y) * (b.y - player.y);
             if (hitmask & Types.CollisionLayers.Player == Types.CollisionLayers.Player &&
-                    (distance == 0.0 ||
-                    distance <= (Const.PLAYER_HITBOX_RADIUS + b.radius) * (Const.PLAYER_HITBOX_RADIUS + b.radius)
-                    )) {
+                    distance <= (Const.PLAYER_HITBOX_RADIUS + b.radius) * (Const.PLAYER_HITBOX_RADIUS + b.radius)) {
                 player.applyDamage();
                 b.remove();
                 bulletRemoved();
-            }
-            else if (hitmask & Types.CollisionLayers.Graze == Types.CollisionLayers.Graze &&
+            } else if (hitmask & Types.CollisionLayers.Graze == Types.CollisionLayers.Graze &&
                     distance <= (Const.PLAYER_GRAZEBOX_RADIUS + b.radius) * (Const.PLAYER_GRAZEBOX_RADIUS + b.radius))
                 player.graze(cast b);
             else b.grazeCount = 0;

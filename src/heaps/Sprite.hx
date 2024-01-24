@@ -36,7 +36,7 @@ class Sprite extends Drawable {
     public var pause : Bool;
     private var time : Float;
 
-    public function new(parent: h2d.Object):Void {
+    public function new(?parent: h2d.Object):Void {
         super(parent);
         animations = new Map();
         current = -1;
@@ -49,36 +49,29 @@ class Sprite extends Drawable {
         final xmlContent = hxd.Res.load(path).toText();
         final xmlTree = Xml.parse(xmlContent).firstElement();
         if (xmlTree.nodeName != "sprite") throw 'Invalid sprite $path!';
-        final sources = new Array<Array<Array<Tile>>>();
+        var sources = new Array<Tile>();
         for (el in xmlTree.elementsNamed("source")) {
             final value = el.firstChild().nodeValue;
-            final originalTile = hxd.Res.load(value).toTile();
-            var size = Std.parseFloat(el.get("size") ?? '${originalTile.width}');
-            if (size > originalTile.width) size = originalTile.width;
-            sources.push(originalTile.grid(size,
-                Std.parseFloat(el.get("dx") ?? '0'),
-                Std.parseFloat(el.get("dy") ?? '0'),
-            ));
+            sources.push(hxd.Res.load(value).toTile());
         }
         for (el in xmlTree.elementsNamed("anim")) {
+            if (el.get("id") == null) throw 'Invalid sprite $path!';
             final frames = new Array<Tile>();
             for (f in el.elementsNamed("frame")) {
-                final tile = sources[
-                    Std.parseInt(f.get("src"))
-                ][
-                    Std.parseInt(f.get("x") ?? "0")
-                ][
-                    Std.parseInt(f.get("y") ?? "0")
-                ];
-                tile.dx = Std.parseFloat(f.get("dx") ?? "0");
-                tile.dy = Std.parseFloat(f.get("dx") ?? "0");
+                if (f.get("src") == null) throw 'Invalid sprite $path!';
+                final src = Std.parseInt(f.get("src"));
+                final width = f.get("width") != null ? Std.parseFloat(f.get("width")) : sources[src].width;
+                final height = f.get("height") != null ? Std.parseFloat(f.get("height")) : sources[src].height;
+                final tile = sources[src].sub(
+                    Std.parseFloat(f.get("x") ?? "0"), Std.parseInt(f.get("y") ?? "0"),
+                    width, height,
+                    Std.parseFloat(f.get("dx") ?? "0"), Std.parseFloat(f.get("dy") ?? "0")
+                );
                 frames.push(tile);
             }
             final loop = el.get("loop");
             addAnimation(
-                Std.parseInt(el.get("id")),
-                frames,
-                Std.parseFloat(el.get("speed")),
+                Std.parseInt(el.get("id")), frames, Std.parseFloat(el.get("speed") ?? "1"),
                 loop != null ? loop == "true" : true
             );
         }

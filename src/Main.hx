@@ -17,6 +17,8 @@ class Main extends hxd.App {
     private var fixedAccum : Float;
     private var time : Float;
 
+    public var hud(default, null) : h2d.Scene;
+
     private static function main():Void {
         new Main();
     }
@@ -38,7 +40,8 @@ class Main extends hxd.App {
     }
 
     private override function init():Void {
-        s2d.scaleMode = LetterBox(320, 180, true, Center, Center);
+        hud = new h2d.Scene();
+        s2d.scaleMode = hud.scaleMode = LetterBox(320, 180, true, Center, Center);
         inputManager = new InputManager();
         inputManager.addAction(Types.InputActions.MoveUp, [ InputManager.ActionInput.Down(hxd.Key.UP) ]);
         inputManager.addAction(Types.InputActions.MoveDown, [ InputManager.ActionInput.Down(hxd.Key.DOWN) ]);
@@ -50,18 +53,27 @@ class Main extends hxd.App {
         changeScene(Playfield, []);
     }
 
+    public override function render(e:h3d.Engine):Void {
+        s2d.render(e);
+        hud.render(e);
+    }
+
     private override function update(dt: Float):Void {
         time += dt;
         inputManager.update();
         fixedAccum += dt;
         for (ent in entities)
             if (ent.markedForDeletion) {
+                if (ent.onDestroyed != null) ent.onDestroyed(ent);
                 ent.destroyed(s2d);
                 entities.remove(ent);
             }
         if (nextScene != null) {
             if (scene != null) scene.exited(s2d);
-            for (ent in entities) ent.scene = nextScene;
+            for (ent in entities) {
+                ent.scene = nextScene;
+                ent.sceneReloaded();
+            }
             scene = nextScene;
             scene.entered(s2d);
             nextScene = null;
@@ -88,10 +100,14 @@ class Main extends hxd.App {
         if (nextScene != null) throw "Can't change scene multiple times at once!";
         final scene = Type.createInstance(cl, args);
         for (ent in entities) {
-            if (dontDestroy.contains(ent)) dontDestroy.remove(ent);
-            else ent.destroy();
+            if (!dontDestroy.contains(ent)) ent.destroy();
         }
         nextScene = scene;
+    }
+
+    private override function dispose():Void {
+        super.dispose();
+        if (hud != null) hud.dispose();
     }
 
     inline public function getEntities():Iterator<Entity> {

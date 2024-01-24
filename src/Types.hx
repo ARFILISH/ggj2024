@@ -36,3 +36,9 @@ enum BulletAim {
     RandomCircle;
     TotallyRandomFan;
 }
+
+enum Item {
+    Power(v : Float, vx : Float);
+    Value(v : Int, vx : Float);
+    Joke;
+}

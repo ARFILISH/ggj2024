@@ -3,14 +3,40 @@ loadBackground("backgrounds/bgTest.xml");
 function spawn() {
     for (i in 0...1) {
         setPreparedParam("idx", i);
-        spawnEnemy(LocalSpace(35.0 * i, -40.0), "data/levels/level_01_enemy0.hscript");
+        spawnEnemy(LocalSpace(35.0 * i, -40.0), "data/levels/level_01_enemy0.hscript", 50, 100, 4);
     }
     clearPreparedParams();
 }
 
+function spawnI() {
+    spawnItem(ItemPower(0.05, 0.0), LocalSpace(45.0, 60.0));
+    spawnItem(ItemPower(0.2, 0.0), LocalSpace(52.0, 40.0));
+    spawnItem(ItemValue(50, 0.0), LocalSpace(40.0, 50.0));
+    spawnItem(ItemJoke, LocalSpace(40.0, 70.0));
+}
+
+function spawnB() {
+    spawnItem(ItemJoke, LocalSpace(-20.0, 60.0));
+    spawnItem(ItemJoke, LocalSpace(20.0, 40.0));
+    spawnItem(ItemJoke, LocalSpace(40.0, 50.0));
+    spawnItem(ItemJoke, LocalSpace(-35.0, 70.0));
+}
+
 function changeColor() {
-    setBackgroundColor(1.0, 1.0, 1.0, 1.0, 5.0);
+    setBackgroundColor(1, 1.0, 1.0, 1.0, 1.0, 5.0);
+    setCameraVelocity(0.0, -600.0, 2.0);
+}
+
+function slowDown() {
+    setCameraVelocity(90.0, -120.0, 0.2);
+    setBackgroundColor(0, 0.0, 1.0, 0.0, 0.8, 3.0);
+    setBackgroundColor(1, 1.0, 0.5, 0.2, 0.3, 2.5);
 }
 
 addEvent(3.0, changeColor);
+addEvent(4.0, spawnI);
 addEvent(6.0, spawn);
+addEvent(9.0, slowDown);
+for (i in 0...40) {
+    addEvent(14.0 + i * 0.2, spawnB);
+}

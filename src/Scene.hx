@@ -4,7 +4,7 @@ class Scene {
     @:allow(Main.update)
     private function exited(s2d: h2d.Scene):Void { }
 
-    public function getEntity<T:Entity>(cl: Class<Entity>, num: Int = 0):T {
+    public function getEntity<T:Entity>(cl: Class<T>, num: Int = 0):T {
         var i : Int = 0;
         for (ent in Main.instance.getEntities())
             if (Std.isOfType(ent, cl)) {
@@ -12,6 +12,12 @@ class Scene {
                 else i++;
             }
         return null;
+    }
+
+    public function getAllOfType<T:Entity>(cl: Class<T>):Iterator<T> {
+        final list = new List<T>();
+        for (ent in Main.instance.getEntities()) if (Std.isOfType(ent, cl)) list.add(cast ent);
+        return list.iterator();
     }
 
     public function spawnEntity<T:Entity>(x: Float, y: Float, cl: Class<T>):T {

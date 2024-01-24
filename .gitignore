@@ -3,4 +3,5 @@
 *.hl
 *.map
 *.dot
+.tmp/
 build/game.js
