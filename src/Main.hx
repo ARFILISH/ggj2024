@@ -29,6 +29,10 @@ class Main extends hxd.App {
         fixedAccum = 0.0;
     }
 
+    private override function onResize():Void {
+        s2d.scaleMode = LetterBox(320, 180, true, Center, Center);
+    }
+
     private override function loadAssets(onLoaded: Void->Void):Void {
         new hxd.fmt.pak.Loader(this.s2d, onLoaded);
     }

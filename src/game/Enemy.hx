@@ -16,9 +16,6 @@ private typedef EnemyDestinationPoint = {
 }
 
 class Enemy extends Entity {
-    @:allow(game.Playfield)
-    private var tag : String;
-
     private var parent : Enemy;
 
     private var sprite : Sprite;
@@ -86,7 +83,7 @@ class Enemy extends Entity {
     public function loadScript(path: String, ?params: Map<String, Any>) {
         final file = hxd.Res.load(path).toText();
         final parser = new Parser();
-        final ast = parser.parseString(file, 'enemy_$tag');
+        final ast = parser.parseString(file);
         final interp = new Interp();
         interp.variables["getLocalX"] = get_lx;
         interp.variables["setLocalX"] = set_lx;
@@ -135,6 +132,16 @@ class Enemy extends Entity {
         interp.variables["setBulletManagerHitRadius"] = setBulletManagerHitRadius;
         interp.variables["setBulletManagerMoveType"] = setBulletManagerMoveType;
         interp.variables["bulletManagerShoot"] = bulletManagerShoot;
+        interp.variables["playSound"] = playSound;
+        interp.variables["playMusic"] = playMusic;
+        interp.variables["stopMusic"] = stopMusic;
+        interp.variables["fadeMusic"] = fadeMusic;
+        interp.variables["loadBackground"] = loadBackground;
+        interp.variables["setCameraPosition"] = setCameraPosition;
+        interp.variables["setCameraVelocity"] = setCameraVelocity;
+        interp.variables["setBackgroundScroll"] = setBackgroundScroll;
+        interp.variables["setBackgroundScrollSpeed"] = setBackgroundScrollSpeed;
+        interp.variables["setBackgroundColor"] = setBackgroundColor;
         interp.variables["LocalSpace"] = Types.Position.Local;
         interp.variables["RelativeSpace"] = Types.Position.Relative;
         interp.variables["WorldSpace"] = Types.Position.World;
@@ -195,42 +202,17 @@ class Enemy extends Entity {
             }
             var hInput = destX - thisX;
             var vInput = destY - thisY;
-            final length = hInput * hInput + vInput * vInput;
+            var length = hInput * hInput + vInput * vInput;
             if (length > 0.0 && Math.sqrt(length) > speed) {
-                hInput = hInput / Math.sqrt(length) * speed;
-                vInput = vInput / Math.sqrt(length) * speed;
-                switch (moveDestination.pos) {
-                    case Local(_, _): {
-                        lx += hInput;
-                        ly += vInput;
-                    }
-                    case Relative(_, _): {
-                        rx += hInput;
-                        ry += vInput;
-                    }
-                    case World(_, _) | Entity(_, _, _): {
-                        x += hInput;
-                        y += vInput;
-                    }
-                }
+                length = Math.sqrt(length);
+                hInput = hInput / length * speed;
+                vInput = vInput / length * speed;
             } else {
-                switch (moveDestination.pos) {
-                    case Local(_, _): {
-                        lx = destX;
-                        ly = destY;
-                    }
-                    case Relative(_, _): {
-                        rx = destX;
-                        ry = destY;
-                    }
-                    case World(_, _) | Entity(_, _, _): {
-                        x = destX;
-                        y = destY;
-                    }
-                };
                 moveDestQueue.pop();
                 if (moveDestination.cb != null) moveDestination.cb();
             }
+            x += hInput;
+            y += vInput;
         }
         time += delta;
     }
@@ -500,5 +482,55 @@ class Enemy extends Entity {
     private function bulletManagerShoot(idx: Int):Void {
         if (!bulletManagers.exists(idx)) throw 'Bullet manager $idx does not exist!';
         bulletManagers[idx].shoot();
+    }
+
+    private function playSound(path: String, volume: Float = 1.0):Void {
+        AudioManager.instance.playSoundNoChannel(path, volume);
+    }
+
+    private function playMusic(path: String, loop: Bool = true, volume: Float = 1.0):Void {
+        AudioManager.instance.playMusic(path, loop, volume);
+    }
+
+    private function fadeMusic(to: Float, time: Float):Void {
+        AudioManager.instance.fadeMusic(to, time);
+    }
+
+    private function stopMusic(fadeOutTime: Float = 0.0):Void {
+        AudioManager.instance.stopMusic(fadeOutTime);
+    }
+
+    private function loadBackground(path: String):Void {
+        if (!Std.isOfType(scene, Playfield) || cast (scene, Playfield).background == null) throw 'There is no background on this scene!';
+        cast (scene, Playfield).background.load(path);
+    }
+
+    private function setCameraPosition(x: Float, y: Float):Void {
+        if (!Std.isOfType(scene, Playfield) || cast (scene, Playfield).background == null) throw 'There is no background on this scene!';
+        cast (scene, Playfield).background.cameraX = x;
+        cast (scene, Playfield).background.cameraY = y;
+    }
+
+    private function setCameraVelocity(x: Float, y: Float):Void {
+        if (!Std.isOfType(scene, Playfield) || cast (scene, Playfield).background == null) throw 'There is no background on this scene!';
+        cast (scene, Playfield).background.cameraVelocityX = x;
+        cast (scene, Playfield).background.cameraVelocityY = y;
+    }
+
+    private function setBackgroundScroll(x: Float, y: Float):Void {
+        if (!Std.isOfType(scene, Playfield) || cast (scene, Playfield).background == null) throw 'There is no background on this scene!';
+        cast (scene, Playfield).background.layer.hScroll = x;
+        cast (scene, Playfield).background.layer.vScroll = y;
+    }
+
+    private function setBackgroundScrollSpeed(x: Float, y: Float):Void {
+        if (!Std.isOfType(scene, Playfield) || cast (scene, Playfield).background == null) throw 'There is no background on this scene!';
+        cast (scene, Playfield).background.layer.hScrollSpeed = x;
+        cast (scene, Playfield).background.layer.vScrollSpeed = y;
+    }
+
+    private function setBackgroundColor(?r: Float, ?g: Float, ?b: Float, ?a: Float, ?time: Float):Void {
+        if (!Std.isOfType(scene, Playfield) || cast (scene, Playfield).background == null) throw 'There is no background on this scene!';
+        cast (scene, Playfield).background.changeLayerColor(r, g, b, a, time);
     }
 }

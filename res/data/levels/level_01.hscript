@@ -1,3 +1,5 @@
+loadBackground("backgrounds/bgTest.xml");
+
 function spawn() {
     for (i in 0...1) {
         setPreparedParam("idx", i);
@@ -6,4 +8,9 @@ function spawn() {
     clearPreparedParams();
 }
 
+function changeColor() {
+    setBackgroundColor(1.0, 1.0, 1.0, 1.0, 5.0);
+}
+
+addEvent(3.0, changeColor);
 addEvent(6.0, spawn);

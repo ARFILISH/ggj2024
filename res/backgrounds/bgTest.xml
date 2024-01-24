@@ -1,0 +1,11 @@
+<background cameraX="0" cameraY="0" cameraVelocityX="0" cameraVelocityY="-40">
+<layer
+    idx="1"
+    src="backgrounds/bgTest.png"
+    hScroll="0" vScroll="0" hScrollSpeed="12" vScrollSpeed="24"
+    parallaxScale="1"
+    r="1" g="0" b="0" a="1"
+    hWrap="true" vWrap="true"
+    followCamera="false"
+/>
+</background>

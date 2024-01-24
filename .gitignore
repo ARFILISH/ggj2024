@@ -2,4 +2,5 @@
 *.pak
 *.hl
 *.map
+*.dot
 build/game.js

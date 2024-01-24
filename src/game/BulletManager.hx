@@ -91,8 +91,8 @@ class BulletManager extends Entity {
                 case Stop: { }
                 case Fixed(rotSpeed): {
                     if (rotSpeed != null) b.rotation += rotSpeed() * delta;
-                    vx = Math.cos(b.rotation);
-                    vy = Math.sin(b.rotation);
+                    vx = Math.cos(b.rotation) * speed;
+                    vy = Math.sin(b.rotation) * speed;
                 }
                 case Position(pos): {
                     var destX : Float;
@@ -130,17 +130,14 @@ class BulletManager extends Entity {
                     var length = vx * vx + vy * vy;
                     if (length > 0.0 && hxd.Math.sqrt(length) > speed) {
                         length = hxd.Math.sqrt(length); 
-                        vx /= length;
-                        vy /= length;
+                        vx = vx / length * speed;
+                        vy = vy / length * speed;
                         b.rotation = Math.atan2(vy, vx);
-                    } else {
-                        vx = 0.0;
-                        vy = 0.0;
                     }
                 }
             }
-            b.x += vx * speed;
-            b.y += vy * speed;
+            b.x += vx;
+            b.y += vy;
         }
     }
 
