@@ -19,6 +19,8 @@ class Main extends hxd.App {
 
     public var hud(default, null) : h2d.Scene;
 
+    public var save(default, null) : { firstGame : Bool, bestScore : Int, soundVolume : Float, musicVolume : Float };
+
     private static function main():Void {
         new Main();
     }
@@ -36,10 +38,11 @@ class Main extends hxd.App {
     }
 
     private override function loadAssets(onLoaded: Void->Void):Void {
-        new hxd.fmt.pak.Loader(this.s2d, onLoaded);
+        new hxd.fmt.pak.Loader(s2d, onLoaded);
     }
 
     private override function init():Void {
+        save = hxd.Save.load({ firstGame : true, bestScore : 0, soundVolume : 1.0, musicVolume : 1.0 });
         hud = new h2d.Scene();
         s2d.scaleMode = hud.scaleMode = LetterBox(320, 180, true, Center, Center);
         inputManager = new InputManager();
@@ -50,7 +53,13 @@ class Main extends hxd.App {
         inputManager.addAction(Types.InputActions.Focus, [ InputManager.ActionInput.Down(hxd.Key.SHIFT) ]);
         inputManager.addAction(Types.InputActions.Shoot, [ InputManager.ActionInput.Pressed(hxd.Key.Z) ]);
         audioManager = new AudioManager();
-        changeScene(Playfield, []);
+        changeScene(Playfield, "data/levels/level_01.hscript");
+        hxd.Window.getInstance().addResizeEvent(onResize);
+        hxd.Window.getInstance().addEventTarget(onEvent);
+    }
+
+    private function onEvent(event: hxd.Event):Void {
+        if (scene != null) scene.event(event);
     }
 
     public override function render(e:h3d.Engine):Void {
@@ -81,7 +90,7 @@ class Main extends hxd.App {
         for (ent in entities) ent.preUpdate();
         for (ent in entities) if (!ent.markedForDeletion) ent.update(dt);
         var fixedDelta = 1.0 / Const.FIXED_FPS;
-        for (i in 0...Const.FIXED_ITERATIONS) {
+        for (_ in 0...Const.FIXED_ITERATIONS) {
             for (ent in entities) if (!ent.markedForDeletion) ent.fixedUpdate(fixedDelta);
             if (fixedAccum >= fixedDelta) fixedAccum -= fixedDelta;
             else break;
@@ -106,7 +115,9 @@ class Main extends hxd.App {
     }
 
     private override function dispose():Void {
+        hxd.Save.save(save);
         super.dispose();
+        hxd.Save.save(save);
         if (hud != null) hud.dispose();
     }
 

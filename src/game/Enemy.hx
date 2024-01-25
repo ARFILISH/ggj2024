@@ -39,7 +39,7 @@ class Enemy extends Entity {
     private var damageSound : String;
     private var deathSound : String;
     
-    private var events : List<EnemyEvent>;
+    private var events : Array<EnemyEvent>;
     private var time : Float;
     private var player : Player;
     private var itemManager : ItemManager;
@@ -65,7 +65,7 @@ class Enemy extends Entity {
         sprite = new Sprite();
         s2d.add(sprite, 4);
         time = 0.0;
-        events = new List();
+        events = new Array();
         moveDestQueue = new List();
         bulletManagers = new Map();
         radius = 0.0;
@@ -86,7 +86,8 @@ class Enemy extends Entity {
 
     private override function destroyed(s2d: h2d.Scene):Void {
         sprite.remove();
-        events.clear();
+        events.resize(0);
+        events = null;
         moveDestQueue.clear();
         if (parent != null) {
             parent.children.remove(this);
@@ -103,7 +104,10 @@ class Enemy extends Entity {
             }
         }
         bulletManagers.clear();
-        for (c in children) c.destroy();
+        for (c in children) {
+            c.parent = null;
+            c.destroy();
+        }
         children = null;
         grazeCount = 0;
         damageParticles.remove();
@@ -196,8 +200,8 @@ class Enemy extends Entity {
     }
 
     private override function update(delta: Float):Void {
-        while (!events.isEmpty() && events.first().time <= time) events.pop().cb();
-        if (events.isEmpty() && moveDestQueue.isEmpty() && children.length == 0) {
+        while (events.length > 0 && events[0].time <= time) events.shift().cb();
+        if (events.length == 0 && moveDestQueue.isEmpty() && children.length == 0) {
             destroy();
             return;
         }
@@ -258,7 +262,7 @@ class Enemy extends Entity {
                     (distance == 0.0 || hxd.Math.sqrt(distance) <= Const.PLAYER_HITBOX_RADIUS + radius))
                 player.applyDamage();
             else if (mask & Types.CollisionLayers.Graze == Types.CollisionLayers.Graze &&
-                    distance <= (Const.PLAYER_GRAZEBOX_RADIUS + radius) * (Const.PLAYER_GRAZEBOX_RADIUS + radius))
+                    distance < (Const.PLAYER_GRAZEBOX_RADIUS + radius) * (Const.PLAYER_GRAZEBOX_RADIUS + radius))
                 player.graze(cast this);
             else grazeCount = 0;
         }
@@ -298,19 +302,9 @@ class Enemy extends Entity {
 
     private function addEvent(time: Float, cb: Void->Void):Void {
         final event = { time: time, cb: cb };
-        if (events.length == 0) {
-            events.add(event);
-            return;
-        }
-        if (event.time >= events.last().time) {
-            events.add(event);
-            return;
-        }
-        if (event.time <= events.first().time) {
-            events.push(event);
-            return;
-        }
-        throw 'Can\'t add event with time that is not in order!';
+        var i = 0;
+        while (i < events.length && events[i].time < time) i++;
+        events.insert(i, event);
     }
 
     @:keep inline private function setSprite(path: String):Void {

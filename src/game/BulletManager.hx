@@ -146,7 +146,7 @@ class BulletManager extends Entity {
             final b : Bullet = cast e;
             final distance = (b.x - player.x) * (b.x - player.x) + (b.y - player.y) * (b.y - player.y);
             if (hitmask & Types.CollisionLayers.Player == Types.CollisionLayers.Player &&
-                    distance <= (Const.PLAYER_HITBOX_RADIUS + b.radius) * (Const.PLAYER_HITBOX_RADIUS + b.radius)) {
+                    distance < (Const.PLAYER_HITBOX_RADIUS + b.radius) * (Const.PLAYER_HITBOX_RADIUS + b.radius)) {
                 player.applyDamage();
                 b.remove();
                 bulletRemoved();

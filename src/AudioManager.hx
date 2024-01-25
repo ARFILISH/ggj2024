@@ -38,6 +38,12 @@ class AudioManager {
         channels.remove(channel);
     }
 
+    public function stopAllSounds():Void {
+        channels.clear();
+        final mgr = hxd.snd.Manager.get();
+        if (mgr != null) mgr.stopAll();
+    }
+
     public function setSoundLoop(channel: Int, loop: Bool):Void {
         if (!channels.exists(channel)) return;
         channels[channel].loop = loop;

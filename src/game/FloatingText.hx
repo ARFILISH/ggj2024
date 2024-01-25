@@ -12,8 +12,9 @@ class FloatingText extends Text {
         this.y = y;
         textAlign = Center;
         @:privateAccess font.size = 5;
-        text = '+${Std.int(value * 100.0) * 0.01}';
+        text = '+${Std.int(value * 100.0) / 100}';
         time = 0.0;
+        setScale(0.6);
     }
 
     public override function sync(ctx: h2d.RenderContext):Void {

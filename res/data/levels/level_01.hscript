@@ -18,8 +18,10 @@ function spawnI() {
 function spawnB() {
     spawnItem(ItemJoke, LocalSpace(-20.0, 60.0));
     spawnItem(ItemJoke, LocalSpace(20.0, 40.0));
+    spawnItem(ItemPower(0.25, 0.4), LocalSpace(20.0, 60.0));
     spawnItem(ItemJoke, LocalSpace(40.0, 50.0));
     spawnItem(ItemJoke, LocalSpace(-35.0, 70.0));
+    spawnItem(ItemPower(0.25, 0.4), LocalSpace(-20.0, 60.0));
 }
 
 function changeColor() {

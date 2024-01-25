@@ -292,7 +292,7 @@ class Background extends SpriteBatch {
 			final szY = (l.vWrap ? ctx.scene.height : l.t.height);
 			l.t.setSize(szX, szY);
 			l.t.scaleToSize(szX, szY);
-			tileWrap = l.hWrap || l.vWrap;
+			tileWrap = l.hWrap || l.vWrap; 
 		}
 		super.draw(ctx);
 	}

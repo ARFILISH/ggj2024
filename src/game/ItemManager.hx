@@ -26,13 +26,13 @@ private class Item extends BatchElement {
             case Power(v, vx): {
                 radius = 0.4;
                 scale = v / 0.05;
-                this.vx = vx;
+                this.vx = vx ?? 0.0;
                 this.vy = -50.0;
             }
             case Value(v, vx): {
                 radius = 0.4;
                 scale = v / 0.05;
-                this.vx = vx;
+                this.vx = vx ?? 0.0;
                 this.vy = -50.0;
             }
             case Joke: {
@@ -85,7 +85,7 @@ class ItemManager extends Entity {
     }
 
     private override function fixedUpdate(delta: Float):Void {
-        if (player == null || !player.isAlive()) return;
+        if (player == null || player.damagedTime > 0.0 || !player.isAlive()) return;
         for (el in batch.getElements()) {
             final item = cast (el, Item);
             final distance = (player.x - item.x) * (player.x - item.x) + (player.y - item.y) * (player.y - item.y);

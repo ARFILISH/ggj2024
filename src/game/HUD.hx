@@ -36,7 +36,7 @@ class HUD extends Object {
     }
 
     public function update(p: Player):Void {
-        score.text = 'SCORE: <font color="#FFFF00">${p.score}</font>';
+        score.text = 'SCORE: <font color="#fffacf">${p.score}</font>';
         var text = 'LIVES: ';
         for (_ in 0...p.lives) text += '<img src="sprites/hud/sprIconLife.png" />';
         lives.text = text;
@@ -44,6 +44,6 @@ class HUD extends Object {
         final bulletTiles = hxd.Res.sprites.game.sprPlayerBullets_png.toTile().grid(16, 0.0, 3.0);
         bullets.loadImage = (_) -> { return bulletTiles[0][p.bulletLevel]; }
         bullets.text = '<img src="_" />: ${p.availableBullets}';
-        power.text = 'POWER: ${Std.int(p.power * 100.0) * 0.01}';
+        power.text = 'POWER: ${Std.int(p.power * 100) / 100}';
     }
 }

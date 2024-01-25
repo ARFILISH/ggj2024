@@ -17,8 +17,7 @@ class PlayerBullet extends Entity {
         sprite.remove();
     }
 
-    @:allow(game.Player.shoot)
-    private function setLevel(level: Int):Void {
+    public function setLevel(level: Int):Void {
         this.level = level;
         sprite.play(level);
     }

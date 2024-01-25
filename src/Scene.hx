@@ -3,6 +3,8 @@ class Scene {
     private function entered(s2d: h2d.Scene):Void { }
     @:allow(Main.update)
     private function exited(s2d: h2d.Scene):Void { }
+    @:allow(Main.onEvent)
+    private function event(event: hxd.Event):Void { }
 
     public function getEntity<T:Entity>(cl: Class<T>, num: Int = 0):T {
         var i : Int = 0;

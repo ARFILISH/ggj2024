@@ -26,8 +26,10 @@ class Player extends Entity {
 
     private var focusing : Bool;
 
-    private var damagedTime : Float;
-    private var timeBeforeDeath : Float;
+    public var damagedTime(default, null) : Float;
+    public var timeBeforeDeath(default, null) : Float;
+
+    private var shootTimers : List<{ time : Float }>;
 
     public var score(default, null) : Int;
     public var lives(default, null) : Int;
@@ -58,6 +60,7 @@ class Player extends Entity {
         damagedTime = 0.0;
         timeBeforeDeath = -1.0;
         canShoot = false;
+        shootTimers = new List();
     }
 
     private override function destroyed(s2d: h2d.Scene) {
@@ -68,6 +71,8 @@ class Player extends Entity {
         grazeParticles.remove();
         grazeParticles = null;
         hud.remove();
+        shootTimers.clear();
+        shootTimers = null;
     }
 
     private override function preUpdate() {
@@ -90,6 +95,12 @@ class Player extends Entity {
     }
 
     private override function update(delta: Float) {
+        if (shootTimers.first() != null) {
+            if (shootTimers.first().time <= 0.0) {
+                shootBullet(x, y - 16.0, bulletLevel);
+                shootTimers.pop();
+            } else shootTimers.first().time -= delta;
+        }
         if (timeBeforeDeath > 0.0) {
             timeBeforeDeath = hxd.Math.max(timeBeforeDeath - delta, 0.0);
             return;
@@ -123,18 +134,48 @@ class Player extends Entity {
         x = Const.PLAYER_START_X;
         y = Const.PLAYER_START_Y;
         score = 0;
-        lives = 4;
+        lives = Const.PLAYER_START_HP;
         grazePoints = 0;
         hud.update(this);
     }
 
     private function shoot():Void {
-        if (availableBullets <= 0) return;
+        if (!canShoot || availableBullets <= 0 || !shootTimers.isEmpty()) return;
+        final level = Std.int(power);
+        switch (level) {
+            case 0: shootBullet(x, y - 16.0, bulletLevel);
+            case 1: for (_ in 0...2) shootTimers.add({ time: 0.14 });
+            case 2: for (_ in 0...3) shootTimers.add({ time: 0.12 });
+            case 3: {
+                for (_ in 0...3) shootTimers.add({ time: 0.09 });
+                shootBullet(x - 20.0, y - 6.0, 0);
+                shootBullet(x + 20.0, y - 6.0, 0);
+            }
+            case 4: {
+                for (_ in 0...4) shootTimers.add({ time: 0.09 });
+                var bullet = scene.spawnEntity(x - 20.0, y - 6.0, PlayerBullet);
+                shootBullet(x - 20.0, y - 6.0, 0);
+                shootBullet(x + 20.0, y - 6.0, 0);
+            }
+            case 5: {
+                for (_ in 0...3) shootTimers.add({ time: 0.08  });
+                shootBullet(x - 20.0, y - 6.0, 0);
+                shootBullet(x + 20.0, y - 6.0, 0);
+                shootBullet(x - 20.0, y - 9.0, bulletLevel > 0 ? 1 : 0);
+                shootBullet(x + 20.0, y - 9.0, bulletLevel > 0 ? 1 : 0);
+            }
+        }
         final bullet = scene.spawnEntity(x, y - 16.0, PlayerBullet);
         bullet.setLevel(bulletLevel);
         availableBullets--;
         if (availableBullets <= 0) bulletLevel = 0;
         hud.update(this);
+    }
+
+    private function shootBullet(x: Float, y: Float, level: Int):Void {
+        if (!canShoot) return;
+        final bullet = scene.spawnEntity(x, y, PlayerBullet);
+        bullet.setLevel(level);
     }
 
     public function addPower(power: Float):Void {
@@ -172,16 +213,27 @@ class Player extends Entity {
         if (invincibility > 0.0 || timeBeforeDeath >= 0.0) return;
         AudioManager.instance.playSound(0, "sounds/sndPlayerDamage.wav");
         lives--;
+        final oldX = x;
+        final oldY = y;
+        x = Const.PLAYER_START_X;
+        y = Const.PLAYER_START_Y;
         if (lives > 0) {
             invincibility = 2.0;
-            x = Const.PLAYER_START_X;
-            y = Const.PLAYER_START_Y;
             damagedTime = 0.08;
             grazePoints = 0;
         } else {
             sprite.visible = false;
             timeBeforeDeath = 0.3;
         }
+        final im = scene.getEntity(ItemManager);
+        if (im != null) {
+            for (i in -2...3) {
+                if (power > 0.0) im.spawn(Power(power * 0.2, i * 15.0), oldX + i * 6.0, oldY);
+                if (score > 10) im.spawn(Value(Std.int(score / 10), i * 9.0), oldX + i * 9.0, oldY - 4.0);
+            }
+        }
+        power = 0.0;
+        score = Std.int(score / 2);
         hud.update(this);
     }
 

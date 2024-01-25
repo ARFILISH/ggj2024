@@ -38,7 +38,7 @@ enum BulletAim {
 }
 
 enum Item {
-    Power(v : Float, vx : Float);
-    Value(v : Int, vx : Float);
+    Power(v : Float, ?vx : Float);
+    Value(v : Int, ?vx : Float);
     Joke;
 }
