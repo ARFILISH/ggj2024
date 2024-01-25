@@ -39,6 +39,7 @@ class Player extends Entity {
     public var grazePoints(default, null) : Int;
     
     public var canShoot : Bool;
+    public var inputEnabled : Bool;
 
     private override function added(s2d: h2d.Scene):Void {
         sprite = new Sprite();
@@ -77,7 +78,7 @@ class Player extends Entity {
 
     private override function preUpdate() {
         final input = InputManager.instance;
-        if (timeBeforeDeath > 0.0) {
+        if (!inputEnabled || timeBeforeDeath > 0.0) {
             velX = 0.0;
             velY = 0.0;
             return;
@@ -136,6 +137,7 @@ class Player extends Entity {
         score = 0;
         lives = Const.PLAYER_START_HP;
         grazePoints = 0;
+        inputEnabled = true;
         hud.update(this);
     }
 
@@ -174,6 +176,7 @@ class Player extends Entity {
 
     private function shootBullet(x: Float, y: Float, level: Int):Void {
         if (!canShoot) return;
+        AudioManager.instance.playSound(4, "sounds/sndPlayerShoot.wav");
         final bullet = scene.spawnEntity(x, y, PlayerBullet);
         bullet.setLevel(level);
     }

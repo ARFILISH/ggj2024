@@ -46,18 +46,20 @@ class GameOver extends Scene {
     }
 
     private override function event(event: hxd.Event):Void {
-        if (event.kind == EKeyDown) {
-            if (!enabled) return;
-            switch (event.keyCode) {
-                case hxd.Key.R: {
-                    enabled = false;
-                    press.remove();
-                    score.setHideTween(2.0, null, null, null, null, null, 0.0, 0.3, null, null, null, null, null, 0.0, null, Main.instance.changeScene.bind(Playfield, null));
-                    score.hide();
-                }
+        if (!enabled || event.kind != EKeyDown) return;
+        switch (event.keyCode) {
+            case hxd.Key.R: {
+                enabled = false;
+                press.remove();
+                score.setHideTween(2.0, null, null, null, null, null, 0.0, 0.3, null, null, null, null, null, 0.0, null, Main.instance.changeScene.bind(Playfield, null));
+                score.hide();
             }
-            if (event.keyCode == hxd.Key.R) {
-                
+            case hxd.Key.ESCAPE | hxd.Key.ENTER | hxd.Key.Z: {
+                enabled = false;
+                press.remove();
+                score.setHideTween(2.0, null, null, null, null, null, 0.0, 0.3, null, null, null, null, null, 0.0, null, Main.instance.changeScene.bind(MainMenu, null));
+                score.hide();
+                if (Scenario.instance != null) Scenario.instance.finish();
             }
         }
     }

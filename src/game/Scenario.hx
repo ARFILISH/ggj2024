@@ -25,7 +25,6 @@ class Scenario extends Entity {
 
     private override function destroyed(s2d: h2d.Scene):Void {
         if (instance != this) return;
-        trace("Destroyed");
         instance = null;
         levels.clear();
         levels = null;
@@ -48,5 +47,11 @@ class Scenario extends Entity {
 
     inline public function addLevel(level: String):Void {
         levels.add(level);
+    }
+
+    inline public function next():String {
+        score = calculateScore().total;
+        levels.pop();
+        return levels.first();
     }
 }

@@ -104,6 +104,7 @@ class ItemManager extends Entity {
                         new FloatingText(item.x, item.y, 1);
                     }
                 }
+                AudioManager.instance.playSound(3, "sounds/sndPickupItem.wav");
                 item.remove();
             }
         }

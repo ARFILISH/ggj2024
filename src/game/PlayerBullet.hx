@@ -36,8 +36,6 @@ class PlayerBullet extends Entity {
         for (enemy in scene.getAllOfType(Enemy)) {
             if (enemy.layer & Types.CollisionLayers.Enemy != Types.CollisionLayers.Enemy) continue;
             final distance = (enemy.x - x) * (enemy.x - x) + (enemy.y - y) * (enemy.y - y);
-            trace(radius);
-            trace(enemy.radius);
             if (distance <= (enemy.radius + radius) * (enemy.radius + radius)) {
                 enemy.applyDamage(10 * (level + 1));
                 destroy();

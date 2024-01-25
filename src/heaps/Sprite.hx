@@ -30,8 +30,8 @@ private class Animation {
 }
 
 class Sprite extends Drawable {
-    public var animations(default, null) : Map<Int, Animation>;
-    private var animCount : Int;
+    private var animations : Map<Int, Animation>;
+    public var animCount(default, null) : Int;
     public var current(default, null) : Int;
     public var pause : Bool;
     private var time : Float;
@@ -95,6 +95,10 @@ class Sprite extends Drawable {
             current = -1;
             time = -1.0;
         }
+    }
+
+    inline public function clear():Void {
+        for (k in animations.keys()) removeAnimation(k);
     }
 
     inline public function hasAnimation(id: Int):Bool {

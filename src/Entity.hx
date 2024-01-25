@@ -39,6 +39,8 @@ abstract class Entity {
     private function update(delta: Float):Void { };
     @:allow(Main.update)
     private function fixedUpdate(delta: Float):Void { };
+    @:allow(Main.onEvent)
+    private function event(event: hxd.Event):Void { };
     @:allow(Main.update)
     private function render():Void { };
 }

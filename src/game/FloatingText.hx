@@ -11,7 +11,6 @@ class FloatingText extends Text {
         this.x = x;
         this.y = y;
         textAlign = Center;
-        @:privateAccess font.size = 5;
         text = '+${Std.int(value * 100.0) / 100}';
         time = 0.0;
         setScale(0.6);

@@ -47,13 +47,13 @@ class LevelScore extends Object {
 
     public function loadData(data: { raw : Int, graze : Int, deaths : Int, score : Int, total : Int, newRecord : Bool }) {
         this.data.text = '
-            Raw score: <font color="#fffacf">${data.raw}</font><br/>
-            Graze: <font color="#fffacf">${data.graze}</font><br/>
+            Raw score: <font color="#ffe27a">${data.raw}</font><br/>
+            Graze: <font color="#ffe27a">${data.graze}</font><br/>
             Deaths: <font color="#ffc4c4">${data.deaths}</font><br/>
         ';
         result.text = '
-            Score: <font color="#fffacf">${data.score}</font><br/>
-            Total: <font color="#ffc4c4">${data.total}</font><br/>
+            Score: <font color="#ffe27a">${data.score}</font><br/>
+            Total: <font color="#ffe27a">${data.total}</font><br/>
         ';
         newRecord.visible = data.newRecord;
     }

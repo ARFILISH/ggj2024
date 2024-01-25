@@ -3,7 +3,7 @@ loadBackground("backgrounds/bgTest.xml");
 function spawn() {
     for (i in 0...1) {
         setPreparedParam("idx", i);
-        spawnEnemy(LocalSpace(35.0 * i, -40.0), "data/levels/level_01_enemy0.hscript", 50, 100, 4);
+        spawnEnemy(LocalSpace(35.0 * i, -40.0), "data/levels/level01_enemy0.hscript", 50, 100, 4);
     }
     clearPreparedParams();
 }

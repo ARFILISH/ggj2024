@@ -15,7 +15,6 @@ class Main extends hxd.App {
     private var dontDestroy : Array<Entity>;
 
     private var fixedAccum : Float;
-    private var time : Float;
 
     public var hud(default, null) : h2d.Scene;
 
@@ -53,13 +52,14 @@ class Main extends hxd.App {
         inputManager.addAction(Types.InputActions.Focus, [ InputManager.ActionInput.Down(hxd.Key.SHIFT) ]);
         inputManager.addAction(Types.InputActions.Shoot, [ InputManager.ActionInput.Pressed(hxd.Key.Z) ]);
         audioManager = new AudioManager();
-        changeScene(Playfield, "data/levels/level_01.hscript");
+        changeScene(Playfield);
         hxd.Window.getInstance().addResizeEvent(onResize);
         hxd.Window.getInstance().addEventTarget(onEvent);
     }
 
     private function onEvent(event: hxd.Event):Void {
         if (scene != null) scene.event(event);
+        for (e in entities) if (!e.markedForDeletion) e.event(event);
     }
 
     public override function render(e:h3d.Engine):Void {
@@ -68,7 +68,6 @@ class Main extends hxd.App {
     }
 
     private override function update(dt: Float):Void {
-        time += dt;
         inputManager.update();
         fixedAccum += dt;
         for (ent in entities)
