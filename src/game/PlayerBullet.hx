@@ -32,12 +32,13 @@ class PlayerBullet extends Entity {
     }
 
     private override function fixedUpdate(delta: Float):Void {
+        if (markedForDeletion) return;
         final radius = 6.0 + level;
         for (enemy in scene.getAllOfType(Enemy)) {
-            if (enemy.layer & Types.CollisionLayers.Enemy != Types.CollisionLayers.Enemy) continue;
             final distance = (enemy.x - x) * (enemy.x - x) + (enemy.y - y) * (enemy.y - y);
             if (distance <= (enemy.radius + radius) * (enemy.radius + radius)) {
-                enemy.applyDamage(10 * (level + 1));
+                if (enemy.layer & Types.CollisionLayers.Enemy == Types.CollisionLayers.Enemy) enemy.applyDamage(10 * (level + 1));
+                AudioManager.instance.playSound(7, "sounds/sndPlayerBulletHit.wav");
                 destroy();
             }
         }

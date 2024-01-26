@@ -127,7 +127,7 @@ class DialogueManager extends Entity {
 
     public function makeHidden():Void {
         clear();
-        if (hiddenCb != null) endedCb();
+        if (hiddenCb != null) hiddenCb();
         if (customHiddenCb != null) {
             customHiddenCb();
             customHiddenCb = null;
@@ -135,6 +135,8 @@ class DialogueManager extends Entity {
     }
 
     public function clear():Void {
+        text.text = "";
+        name.text = "";
         state = 0;
         layers.alpha = 0.0;
         sprite.clear();

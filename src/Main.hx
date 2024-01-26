@@ -52,7 +52,7 @@ class Main extends hxd.App {
         inputManager.addAction(Types.InputActions.Focus, [ InputManager.ActionInput.Down(hxd.Key.SHIFT) ]);
         inputManager.addAction(Types.InputActions.Shoot, [ InputManager.ActionInput.Pressed(hxd.Key.Z) ]);
         audioManager = new AudioManager();
-        changeScene(Playfield);
+        changeScene(Playfield, "stages/stage01.hscript");
         hxd.Window.getInstance().addResizeEvent(onResize);
         hxd.Window.getInstance().addEventTarget(onEvent);
     }

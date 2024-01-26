@@ -19,18 +19,22 @@ class Playfield extends Scene {
         s2d.add(background, 0);
         player = spawnEntity(Const.PLAYER_START_X, Const.PLAYER_START_Y, Player);
         player.onDestroyed = playerDeath;
-        player.inputEnabled = false;
+        player.disableInput();
         itemManager = spawnEntity(0.0, 0.0, ItemManager);
         levelEnd = spawnEntity(0.0, 0.0, LevelEnd);
         levelEnd.showedCb = statsShowed;
         levelEnd.startedHidingCb = statsStartedHiding;
         dialogueManager = spawnEntity(0.0, 0.0, DialogueManager);
-        dialogueManager.start("data/dialogues/dlgLevel01Pre.xml");
+        dialogueManager.startedCb = dialogueStarted;
+        dialogueManager.endedCb = dialogueEnded;
+        dialogueManager.hiddenCb = dialogueHidden;
+        dialogueManager.eventCb = dialogueEvents;
         if (Scenario.instance == null && neededLevel != null) {
             spawnEntity(0.0, 0.0, Scenario);
             Scenario.instance.addLevel(neededLevel);
+            Scenario.instance.addLevel(neededLevel);
         }
-        // loadScript(Scenario.instance.getCurrentScript());
+        loadScript(Scenario.instance.getCurrentScript());
     }
 
     private override function exited(s2d: h2d.Scene):Void {
@@ -42,10 +46,12 @@ class Playfield extends Scene {
     }
 
     private function clear():Void {
-        player.inputEnabled = false;
+        player.disableInput();
+        player.canShoot = false;
         if (mainEnemy != null) mainEnemy.destroy();
         itemManager.clear();
         background.clear();
+        dialogueManager.clear();
         for (mgr in getAllOfType(BulletManager)) mgr.destroy();
     }
 
@@ -90,5 +96,24 @@ class Playfield extends Scene {
             player.onDestroyed = null;
             Main.instance.changeScene(MainMenu);
         }
+    }
+
+    private function dialogueStarted():Void {
+        if (player != null) player.disableInput();
+        for (mgr in getAllOfType(BulletManager)) mgr.destroy();
+        if (mainEnemy != null) mainEnemy.paused = true;
+    }
+
+    private function dialogueEnded():Void {
+        
+    }
+
+    private function dialogueHidden():Void {
+        if (player != null) player.enableInput();
+        if (mainEnemy != null) mainEnemy.paused = false;
+    }
+
+    private function dialogueEvents(event: Int):Void {
+        if (event == 0) AudioManager.instance.stopMusic(0.0);
     }
 }

@@ -1,3 +1,4 @@
 build.hxml
 --debug
 --dce no
+-D hscriptPos

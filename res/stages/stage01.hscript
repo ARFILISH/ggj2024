@@ -1,0 +1,44 @@
+loadBackground("backgrounds/bgStage01.xml");
+
+setCameraVelocity(0.0, -60.0);
+
+function levelStart() {
+    playMusic("sounds/musStage01.wav");
+}
+
+function stopMoving() {
+    setCameraVelocity(0.0, 0.0, 1.0);
+}
+
+function wave0() {
+    setPreparedParam("x0", -80.0);
+    setPreparedParam("y0", 40.0);
+    setPreparedParam("x1", -65.0);
+    setPreparedParam("y1", 80.0);
+    setPreparedParam("x2", -120.0);
+    setPreparedParam("y2", 100.0);
+    spawnEnemy(LocalSpace(-80.0, -20.0), "stages/stage01Mask01.hscript", 1, 50, 1, null, deadMask);
+    setPreparedParam("x0", 80.0);
+    setPreparedParam("y0", 40.0);
+    setPreparedParam("x1", 65.0);
+    setPreparedParam("y1", 80.0);
+    setPreparedParam("x2", 120.0);
+    setPreparedParam("y2", 100.0);
+    spawnEnemy(LocalSpace(80.0, -20.0), "stages/stage01Mask01.hscript", 1, 50, 1, null, deadMask);
+    clearPreparedParams();
+}
+
+function deadMask(enemy) {
+    for (i in 0...3) spawnItem(ItemJoke, WorldSpace(enemy.x, enemy.y));
+}
+
+function wait() {
+    
+}
+
+addEvent(2.0, levelStart);
+for (i in 0...3) {
+    addEvent(2.0 + i * 0.3, wave0);
+}
+addEvent(129.0, stopMoving);
+addEvent(150.0, wait);

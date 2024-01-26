@@ -39,7 +39,8 @@ class Player extends Entity {
     public var grazePoints(default, null) : Int;
     
     public var canShoot : Bool;
-    public var inputEnabled : Bool;
+    private var inputShouldBeEnabled : Bool;
+    private var inputEnabled : Bool;
 
     private override function added(s2d: h2d.Scene):Void {
         sprite = new Sprite();
@@ -83,7 +84,7 @@ class Player extends Entity {
             velY = 0.0;
             return;
         }
-        if (input.getActionResult(Types.InputActions.Shoot)) shoot();
+        if (canShoot && input.getActionResult(Types.InputActions.Shoot)) shoot();
         focusing = input.getActionResult(Types.InputActions.Focus);
         final hInput = input.getActionValue(Types.InputActions.MoveRight) - input.getActionValue(Types.InputActions.MoveLeft);
         final vInput = input.getActionValue(Types.InputActions.MoveDown) - input.getActionValue(Types.InputActions.MoveUp);
@@ -96,6 +97,11 @@ class Player extends Entity {
     }
 
     private override function update(delta: Float) {
+        if (!inputEnabled)
+            if (inputShouldBeEnabled) {
+                inputEnabled = true;
+                inputShouldBeEnabled = false;
+            }
         if (shootTimers.first() != null) {
             if (shootTimers.first().time <= 0.0) {
                 shootBullet(x, y - 16.0, bulletLevel);
@@ -129,15 +135,23 @@ class Player extends Entity {
         sprite.y = hitboxSprite.y = grazeParticles.y = y;
     }
 
+    public function disableInput():Void {
+        inputEnabled = false;
+    }
+
+    public function enableInput():Void {
+        inputShouldBeEnabled = true;
+    }
+
     public function levelStarted():Void {
-        canShoot = true;
         invincibility = 2.0;
         x = Const.PLAYER_START_X;
         y = Const.PLAYER_START_Y;
         score = 0;
         lives = Const.PLAYER_START_HP;
         grazePoints = 0;
-        inputEnabled = true;
+        enableInput();
+        canShoot = true;
         hud.update(this);
     }
 
@@ -155,7 +169,6 @@ class Player extends Entity {
             }
             case 4: {
                 for (_ in 0...4) shootTimers.add({ time: 0.09 });
-                var bullet = scene.spawnEntity(x - 20.0, y - 6.0, PlayerBullet);
                 shootBullet(x - 20.0, y - 6.0, 0);
                 shootBullet(x + 20.0, y - 6.0, 0);
             }
@@ -167,15 +180,12 @@ class Player extends Entity {
                 shootBullet(x + 20.0, y - 9.0, bulletLevel > 0 ? 1 : 0);
             }
         }
-        final bullet = scene.spawnEntity(x, y - 16.0, PlayerBullet);
-        bullet.setLevel(bulletLevel);
         availableBullets--;
         if (availableBullets <= 0) bulletLevel = 0;
         hud.update(this);
     }
 
     private function shootBullet(x: Float, y: Float, level: Int):Void {
-        if (!canShoot) return;
         AudioManager.instance.playSound(4, "sounds/sndPlayerShoot.wav");
         final bullet = scene.spawnEntity(x, y, PlayerBullet);
         bullet.setLevel(level);

@@ -136,13 +136,17 @@ class Background extends SpriteBatch {
 	}
 
 	public override function clear():Void {
+		super.clear();
+		cameraVelocityX = 0.0;
+		cameraVelocityY = 0.0;
+		cameraX = 0.0;
+		cameraY = 0.0;
 		layers.clear();
 		layerColorTweens.clear();
 		layerScrollTweens.clear();
 		layerScrollSpeedTweens.clear();
 		cameraPosTween = null;
 		cameraVelTween = null;
-		super.clear();
 	}
 
 	public function setLayerColor(idx: Int, ?r: Float, ?g: Float, ?b: Float, ?a: Float, ?time: Float):Void {

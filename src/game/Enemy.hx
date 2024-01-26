@@ -32,7 +32,10 @@ class Enemy extends Entity {
         @:keep inline private function get_ry():Float return y - Const.ENEMY_BASE_Y;
         @:keep inline private function set_ry(val: Float):Float return y = Const.ENEMY_BASE_Y + val;
 
+    public var paused : Bool;
+
     private var sprite : Sprite;
+    private var healthBar : h2d.Graphics;
     private var damageParticles : Particles;
     private var damageParticlesConfig : Dynamic;
     private var deathParticlesConfig : Dynamic;
@@ -43,6 +46,7 @@ class Enemy extends Entity {
     private var time : Float;
     private var player : Player;
     private var itemManager : ItemManager;
+    private var dialogueManager : DialogueManager;
     private var moveDestQueue : List<EnemyDestinationPoint>;
     private var children : Array<Enemy>;
 
@@ -60,10 +64,15 @@ class Enemy extends Entity {
 
     private var grazeCount : Int;
 
+    public var onKilled : Enemy->Void;
+
     private override function added(s2d: h2d.Scene):Void {
         parent = null;
         sprite = new Sprite();
         s2d.add(sprite, 4);
+        healthBar = new h2d.Graphics();
+        s2d.add(healthBar, 4);
+        healthBar.visible = false;
         time = 0.0;
         events = new Array();
         moveDestQueue = new List();
@@ -81,11 +90,14 @@ class Enemy extends Entity {
         deathSound = null;
         player = scene.getEntity(Player);
         itemManager = scene.getEntity(ItemManager);
-
+        dialogueManager = scene.getEntity(DialogueManager);
+        onKilled = null;
     }
 
     private override function destroyed(s2d: h2d.Scene):Void {
         sprite.remove();
+        healthBar.clear();
+        healthBar.remove();
         events.resize(0);
         events = null;
         moveDestQueue.clear();
@@ -177,6 +189,11 @@ class Enemy extends Entity {
         interp.variables["setBackgroundScrollSpeed"] = setBackgroundScrollSpeed;
         interp.variables["setBackgroundColor"] = setBackgroundColor;
         interp.variables["spawnItem"] = spawnItem;
+        interp.variables["startDialogue"] = startDialogue;
+        interp.variables["showHealthbar"] = showHealthbar;
+        interp.variables["hideHealthbar"] = hideHealthbar;
+        interp.variables["loadDamageParticles"] = loadDamageParticles;
+        interp.variables["loadDeathParticles"] = loadDeathParticles;
         interp.variables["LocalSpace"] = Types.Position.Local;
         interp.variables["RelativeSpace"] = Types.Position.Relative;
         interp.variables["WorldSpace"] = Types.Position.World;
@@ -195,11 +212,13 @@ class Enemy extends Entity {
         interp.variables["ItemValue"] = Types.Item.Value;
         interp.variables["ItemJoke"] = Types.Item.Joke;
         interp.variables["Math"] = hxd.Math;
+        interp.variables["Std"] = Std;
         if (params != null) for (k => v in params) interp.variables[k] = v;
         interp.execute(ast);
     }
 
     private override function update(delta: Float):Void {
+        if (isPaused()) return;
         while (events.length > 0 && events[0].time <= time) events.shift().cb();
         if (events.length == 0 && moveDestQueue.isEmpty() && children.length == 0) {
             destroy();
@@ -256,6 +275,7 @@ class Enemy extends Entity {
     }
 
     private override function fixedUpdate(dt: Float):Void {
+        if (isPaused()) return;
         if (player != null && player.isAlive()) {
             final distance = (x - player.x) * (x - player.x) + (y - player.y) * (y - player.y);
             if (mask & Types.CollisionLayers.Player == Types.CollisionLayers.Player &&
@@ -271,6 +291,14 @@ class Enemy extends Entity {
     private override function render():Void {
         sprite.x = damageParticles.x = x;
         sprite.y = damageParticles.y = y;
+            if (healthBar.visible) {
+            healthBar.clear();
+            healthBar.beginFill(0x000000, 0.0);
+            healthBar.lineStyle(1, 0xFFFFFF, 0.7);
+            final amount = -2.0 * hxd.Math.max(health, 0.0) / (maxHealth > 0.0 ? maxHealth : 1.0);
+            healthBar.drawPieInner(x, y, radius + 5.0, radius + 5.0, 0.0, amount * hxd.Math.PI);
+            healthBar.endFill();
+        }
     }
 
     public function applyDamage(damage: Int):Void {
@@ -279,6 +307,8 @@ class Enemy extends Entity {
         if (health <= 0) {
             if (deathParticlesConfig != null) {
                 final ps = new Particles(Main.instance.s2d);
+                ps.x = x;
+                ps.y = y;
                 ps.load(deathParticlesConfig);
                 ps.onEnd = ps.remove;
             }
@@ -292,6 +322,7 @@ class Enemy extends Entity {
                     if (choice == 0) itemManager.spawn(Power(hxd.Math.random(0.1) + 0.03, vel), x, y);
                     else if (choice == 1) itemManager.spawn(Value((Std.random(10) + 1) * 10, vel), x, y);
                 }
+            if (onKilled != null) onKilled(this);
             new FloatingText(x, y - 2.0, scoreBonus);
             destroy();
         } else {
@@ -301,6 +332,7 @@ class Enemy extends Entity {
     }
 
     private function addEvent(time: Float, cb: Void->Void):Void {
+        if (this.time > time) return;
         final event = { time: time, cb: cb };
         var i = 0;
         while (i < events.length && events[i].time < time) i++;
@@ -411,7 +443,8 @@ class Enemy extends Entity {
         moveDestQueue.clear();
     }
 
-    private function spawnEnemy(pos: Types.Position, script: String, health: Int, scoreBonus: Int, items: Int):Void {
+    private function spawnEnemy(pos: Types.Position, script: String, health: Int, scoreBonus: Int, items: Int,
+                ?destroyedCb: Entity->Void, killedCb: Enemy->Void):Void {
         var newX : Float;
         var newY : Float;
         switch (pos) {
@@ -438,6 +471,8 @@ class Enemy extends Entity {
         enemy.scoreBonus = scoreBonus;
         enemy.items = items;
         enemy.parent = this;
+        enemy.onDestroyed = destroyedCb;
+        enemy.onKilled = killedCb;
         children.push(enemy);
     }
 
@@ -610,5 +645,32 @@ class Enemy extends Entity {
             }
         }
         itemManager.spawn(type, realX, realY);
+    }
+
+    private function startDialogue(path: String, ?startedCb: Void->Void, ?endedCb: Void->Void, ?hiddenCb: Void->Void):Void {
+        if (dialogueManager == null) throw 'There is no dialogue manager on this scene!';
+        dialogueManager.start(path, startedCb, endedCb, hiddenCb);
+    }
+
+    private function showHealthbar():Void {
+        healthBar.visible = true;
+    }
+
+    private function loadDamageParticles(path: String):Void {
+        damageParticlesConfig = haxe.Json.parse(hxd.Res.load(path).toText());
+    }
+
+    private function loadDeathParticles(path: String):Void {
+        deathParticlesConfig = haxe.Json.parse(hxd.Res.load(path).toText());
+    }
+
+    private function hideHealthbar():Void {
+        healthBar.clear();
+        healthBar.visible = false;
+    }
+
+    inline private function isPaused():Bool {
+        if (parent != null) return paused || parent.isPaused();
+        return paused;
     }
 }
