@@ -52,12 +52,12 @@ class AudioManager {
     public function playMusic(path: String, loop: Bool = true, volume: Float = 1.0):Void {
         if (music != null) music.stop();
         music = hxd.Res.load(path).toSound().play(loop, volume, null, sfxSoundGroup);
-        music.onEnd = function():Void { music = null; };
+        music.onEnd = () -> { if (!music.loop) music = null; };
     }
 
     public function stopMusic(fadeOutTime: Float = 0.0):Void {
         if (music == null) return;
-        if (fadeOutTime > 0.0) music.fadeTo(0.0, fadeOutTime, function() { music.stop(); music = null; });
+        if (fadeOutTime > 0.0) music.fadeTo(0.0, fadeOutTime, () -> { music.stop(); music = null; });
         else {
             music.stop();
             music = null;

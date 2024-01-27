@@ -1,14 +1,14 @@
 function shoot() {
     createBulletManager(0);
     loadBulletManagerBullets(0, "sprites/game/sprBullets01.xml");
-    setBulletManagerTile(0, 16);
+    setBulletManagerTile(0, 17);
     setBulletManagerAimType(0, AimEntityFan(player));
     setBulletManagerCount(0, 1, 1);
     setBulletManagerAngle(0, 0.0, 0.0);
     setBulletManagerSpeed(0, 60.0, 60.0);
-    setBulletManagerRadius(0, 0.0, 0.0);
+    setBulletManagerRadius(0, 0.0, 4.0);
     setBulletManagerHitmask(0, 1 | 2);
-    setBulletManagerHitRadius(0, 2.0);
+    setBulletManagerHitRadius(0, 4.0);
     setBulletManagerMoveType(0, MoveTypeFixed());
     bulletManagerShoot(0);
 }

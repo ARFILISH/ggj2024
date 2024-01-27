@@ -160,20 +160,20 @@ class Player extends Entity {
         final level = Std.int(power);
         switch (level) {
             case 0: shootBullet(x, y - 16.0, bulletLevel);
-            case 1: for (_ in 0...2) shootTimers.add({ time: 0.14 });
-            case 2: for (_ in 0...3) shootTimers.add({ time: 0.12 });
+            case 1: for (i in 0...2) shootTimers.add({ time: 0.14 * (i > 0 ? 1 : 0) });
+            case 2: for (i in 0...3) shootTimers.add({ time: 0.12 * (i > 0 ? 1 : 0) });
             case 3: {
-                for (_ in 0...3) shootTimers.add({ time: 0.09 });
+                for (i in 0...3) shootTimers.add({ time: 0.09 * i > 0 ? 1 : 0 });
                 shootBullet(x - 20.0, y - 6.0, 0);
                 shootBullet(x + 20.0, y - 6.0, 0);
             }
             case 4: {
-                for (_ in 0...4) shootTimers.add({ time: 0.09 });
+                for (i in 0...4) shootTimers.add({ time: 0.09 * (i > 0 ? 1 : 0) });
                 shootBullet(x - 20.0, y - 6.0, 0);
                 shootBullet(x + 20.0, y - 6.0, 0);
             }
             case 5: {
-                for (_ in 0...3) shootTimers.add({ time: 0.08  });
+                for (i in 0...3) shootTimers.add({ time: 0.08 * (i > 0 ? 1 : 0) });
                 shootBullet(x - 20.0, y - 6.0, 0);
                 shootBullet(x + 20.0, y - 6.0, 0);
                 shootBullet(x - 20.0, y - 9.0, bulletLevel > 0 ? 1 : 0);

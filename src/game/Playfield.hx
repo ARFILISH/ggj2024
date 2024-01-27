@@ -65,12 +65,11 @@ class Playfield extends Scene {
 
     private function playerDeath(ent: Entity):Void {
         levelEnd.destroy();
-        recordScore();
+        recordScore(cast ent);
         Main.instance.changeScene(GameOver);
     }
 
-    private function recordScore():Void {
-        if (player == null) return;
+    private function recordScore(player: Player):Void {
         if (Scenario.instance != null) Scenario.instance.currentLevelData = {
             score : player.score,
             graze : player.grazePoints,
@@ -79,7 +78,7 @@ class Playfield extends Scene {
     }
 
     private function levelCompleted(_):Void {
-        recordScore();
+        recordScore(player);
         if (levelEnd != null) levelEnd.show();
     }
 
@@ -104,9 +103,7 @@ class Playfield extends Scene {
         if (mainEnemy != null) mainEnemy.paused = true;
     }
 
-    private function dialogueEnded():Void {
-        
-    }
+    private function dialogueEnded():Void { }
 
     private function dialogueHidden():Void {
         if (player != null) player.enableInput();

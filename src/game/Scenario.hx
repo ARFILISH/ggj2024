@@ -41,7 +41,6 @@ class Scenario extends Entity {
         var newScore = raw + Std.int(raw * 0.05) * graze - Std.int(raw * 0.1) * deaths;
         var total = score + newScore;
         var newRecord = score > Main.instance.save.bestScore;
-        currentLevelData = null;
         return { raw : raw, graze : graze, deaths : deaths, score : newScore, total : total, newRecord : newRecord };
     }
 

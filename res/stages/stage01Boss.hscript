@@ -1,0 +1,13 @@
+setSprite("sprites/stage01/sprStage01Joe.xml");
+setLayer(0);
+setMask(0);
+setRadius(8.0);
+loadDamageParticles("particles/ptcEnemyDamage.json");
+
+moveToByTime(LocalSpace(0.0, 27.0), 1.0);
+
+function start() {
+
+}
+
+addEvent(4.0, start);

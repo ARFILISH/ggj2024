@@ -54,6 +54,8 @@ class Enemy extends Entity {
 
     private var bulletManagers : Map<Int, BulletManager>;
 
+    private var healthbarRadius : Float;
+
     public var radius : Float;
     private var mask : Int;
     public var layer(default, null) : Int;
@@ -131,6 +133,7 @@ class Enemy extends Entity {
         parser.allowTypes = true;
         final ast = parser.parseString(file);
         final interp = new Interp();
+        interp.variables["getTime"] = () -> time;
         interp.variables["getLocalX"] = get_lx;
         interp.variables["setLocalX"] = set_lx;
         interp.variables["getLocalY"] = get_ly;
@@ -139,14 +142,14 @@ class Enemy extends Entity {
         interp.variables["setRelativeX"] = set_rx;
         interp.variables["getRelativeY"] = get_ry;
         interp.variables["setRelativeY"] = set_ry;
-        interp.variables["getWorldX"] = function():Float { return x; };
-        interp.variables["setWorldX"] = function(val: Float):Float { return x = val; };
-        interp.variables["getWorldY"] = function():Float { return y; };
-        interp.variables["setWorldY"] = function(val: Float):Float { return y = val; };
-        interp.variables["getRadius"] = function():Float { return radius; };
-        interp.variables["setRadius"] = function(val: Float):Float { return radius = val; };
-        interp.variables["setMask"] = function(val: Int):Int { return mask = val; };
-        interp.variables["setLayer"] = function(val: Int):Int { return layer = val; };
+        interp.variables["getWorldX"] = () -> { return x; };
+        interp.variables["setWorldX"] = (val: Float) -> { return x = val; };
+        interp.variables["getWorldY"] = () -> { return y; };
+        interp.variables["setWorldY"] = (val: Float) ->  { return y = val; };
+        interp.variables["getRadius"] = () -> { return radius; };
+        interp.variables["setRadius"] = (val: Float) ->  { return radius = val; };
+        interp.variables["setMask"] = (val: Int) -> { return mask = val; };
+        interp.variables["setLayer"] = (val: Int) -> { return layer = val; };
         interp.variables["player"] = player;
         interp.variables["addEvent"] = addEvent;
         interp.variables["setSprite"] = setSprite;
@@ -194,6 +197,8 @@ class Enemy extends Entity {
         interp.variables["hideHealthbar"] = hideHealthbar;
         interp.variables["loadDamageParticles"] = loadDamageParticles;
         interp.variables["loadDeathParticles"] = loadDeathParticles;
+        interp.variables["setDamageSound"] = setDamageSound;
+        interp.variables["setDeathSound"] = setDeathSound;
         interp.variables["LocalSpace"] = Types.Position.Local;
         interp.variables["RelativeSpace"] = Types.Position.Relative;
         interp.variables["WorldSpace"] = Types.Position.World;
@@ -296,7 +301,7 @@ class Enemy extends Entity {
             healthBar.beginFill(0x000000, 0.0);
             healthBar.lineStyle(1, 0xFFFFFF, 0.7);
             final amount = -2.0 * hxd.Math.max(health, 0.0) / (maxHealth > 0.0 ? maxHealth : 1.0);
-            healthBar.drawPieInner(x, y, radius + 5.0, radius + 5.0, 0.0, amount * hxd.Math.PI);
+            healthBar.drawPieInner(x, y, healthbarRadius, healthbarRadius, 0.0, amount * hxd.Math.PI);
             healthBar.endFill();
         }
     }
@@ -652,7 +657,8 @@ class Enemy extends Entity {
         dialogueManager.start(path, startedCb, endedCb, hiddenCb);
     }
 
-    private function showHealthbar():Void {
+    private function showHealthbar(radius: Float):Void {
+        healthbarRadius = radius;
         healthBar.visible = true;
     }
 
@@ -667,6 +673,14 @@ class Enemy extends Entity {
     private function hideHealthbar():Void {
         healthBar.clear();
         healthBar.visible = false;
+    }
+
+    @:keep inline private function setDamageSound(path: String) {
+        damageSound = path;
+    }
+
+    @:keep inline private function setDeathSound(path: String) {
+        deathSound = path;
     }
 
     inline private function isPaused():Bool {
