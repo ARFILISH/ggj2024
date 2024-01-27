@@ -41,7 +41,7 @@ class LevelScore extends Object {
         result = new HtmlText(font, this);
         newRecord = new Text(font, result);
         newRecord.text = "NEW RECORD!";
-        newRecord.setScale(1.5);
+        newRecord.setScale(1.3);
         newRecord.textColor = 0xFFF8BC;
     }
 

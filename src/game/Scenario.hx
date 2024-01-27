@@ -20,6 +20,7 @@ class Scenario extends Entity {
     public function finish():Void {
         if (score > Main.instance.save.bestScore) Main.instance.save.bestScore = score;
         Main.instance.save.firstGame = false;
+        hxd.Save.save(Main.instance.save, "lhSave");
         destroy();
     }
 
@@ -40,8 +41,12 @@ class Scenario extends Entity {
         final deaths = currentLevelData.deaths;
         var newScore = raw + Std.int(raw * 0.05) * graze - Std.int(raw * 0.1) * deaths;
         var total = score + newScore;
-        var newRecord = score > Main.instance.save.bestScore;
+        var newRecord = total > Main.instance.save.bestScore;
         return { raw : raw, graze : graze, deaths : deaths, score : newScore, total : total, newRecord : newRecord };
+    }
+
+    public function updateScore():Void {
+        score = calculateScore().total;
     }
 
     inline public function addLevel(level: String):Void {

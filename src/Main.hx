@@ -1,9 +1,12 @@
-import game.Playfield;
 import haxe.Rest;
 import hxd.App;
 
 class Main extends hxd.App {
     public static var instance(default, null) : Main = null;
+
+    #if debug
+    public static var timeMultiplier : Float = 1.0;
+    #end
 
     private var inputManager : InputManager;
     private var audioManager : AudioManager;
@@ -41,7 +44,7 @@ class Main extends hxd.App {
     }
 
     private override function init():Void {
-        save = hxd.Save.load({ firstGame : true, bestScore : 0, soundVolume : 1.0, musicVolume : 1.0 });
+        save = hxd.Save.load({ firstGame : true, bestScore : 0, soundVolume : 1.0, musicVolume : 1.0 }, "lhSave");
         hud = new h2d.Scene();
         s2d.scaleMode = hud.scaleMode = LetterBox(320, 180, true, Center, Center);
         inputManager = new InputManager();
@@ -52,7 +55,7 @@ class Main extends hxd.App {
         inputManager.addAction(Types.InputActions.Focus, [ InputManager.ActionInput.Down(hxd.Key.SHIFT) ]);
         inputManager.addAction(Types.InputActions.Shoot, [ InputManager.ActionInput.Pressed(hxd.Key.Z) ]);
         audioManager = new AudioManager();
-        changeScene(Playfield, "stages/stage01.hscript");
+        changeScene(game.MainMenu);
         hxd.Window.getInstance().addResizeEvent(onResize);
         hxd.Window.getInstance().addEventTarget(onEvent);
     }
@@ -68,6 +71,10 @@ class Main extends hxd.App {
     }
 
     private override function update(dt: Float):Void {
+        #if debug
+        if (timeMultiplier < 0.0) timeMultiplier = 0.0;
+        dt *= timeMultiplier;
+        #end
         inputManager.update();
         fixedAccum += dt;
         for (ent in entities)
@@ -114,7 +121,6 @@ class Main extends hxd.App {
     }
 
     private override function dispose():Void {
-        hxd.Save.save(save);
         super.dispose();
         hxd.Save.save(save);
         if (hud != null) hud.dispose();

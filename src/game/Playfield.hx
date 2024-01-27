@@ -32,7 +32,6 @@ class Playfield extends Scene {
         if (Scenario.instance == null && neededLevel != null) {
             spawnEntity(0.0, 0.0, Scenario);
             Scenario.instance.addLevel(neededLevel);
-            Scenario.instance.addLevel(neededLevel);
         }
         loadScript(Scenario.instance.getCurrentScript());
     }
@@ -87,13 +86,14 @@ class Playfield extends Scene {
     }
 
     private function statsStartedHiding():Void {
+        recordScore(player);
         final next = Scenario.instance.next();
         if (next != null) loadScript(next);
         else {
             levelEnd.startedHidingCb = levelEnd.showedCb = null;
             levelEnd.destroyAfterHide = true;
             player.onDestroyed = null;
-            Main.instance.changeScene(MainMenu);
+            Main.instance.changeScene(Ending);
         }
     }
 

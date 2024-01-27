@@ -14,4 +14,5 @@
 
 -js build/game.js
 -m Main
+
 --dce std

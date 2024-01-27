@@ -1,1 +1,1 @@
-# A GGJ4 Game
+# LaugHELL - A Global Game Jam 2024 bullet hell game made in Haxe and Heaps.io

@@ -1,4 +1,4 @@
-<dialogue bg="backgrounds/bgGameOver.xml" autoHide="false">
+<dialogue bg="backgrounds/bgJoe.xml" autoHide="false">
     <character src="sprites/dialogue/sprDialogueJoe.xml">Joe</character>
     <phrase you="true" emotion="1">I told you.</phrase>
     <phrase you="false">Ngahhh...</phrase>

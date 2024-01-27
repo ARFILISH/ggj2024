@@ -41,7 +41,7 @@ class AudioManager {
     public function stopAllSounds():Void {
         channels.clear();
         final mgr = hxd.snd.Manager.get();
-        if (mgr != null) mgr.stopAll();
+        if (mgr != null) mgr.stopByName("sfxSoundGroup");
     }
 
     public function setSoundLoop(channel: Int, loop: Bool):Void {

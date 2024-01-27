@@ -14,6 +14,9 @@ class HUD extends Object {
     private var graze : HtmlText;
     private var bullets : HtmlText;
 
+    private var powerLevelUpText : HUDFloatingText;
+    private var bulletLevelUpText : HUDFloatingText;
+
     public function new(?p: h2d.Object):Void {
         super(p);
         new h2d.Bitmap(hxd.Res.sprites.hud.sprHud.toTile(), this);
@@ -45,5 +48,15 @@ class HUD extends Object {
         bullets.loadImage = (_) -> { return bulletTiles[0][p.bulletLevel]; }
         bullets.text = '<img src="_" />: ${p.availableBullets}';
         power.text = 'POWER: ${Std.int(p.power * 100) / 100}';
+    }
+
+    public function powerLevelUp():Void {
+        if (powerLevelUpText != null) powerLevelUpText.remove();
+        powerLevelUpText = new HUDFloatingText(103.0, 30.0, "POWER LEVEL UP!", this);
+    }
+
+    public function bulletLevelUp():Void {
+        if (bulletLevelUpText != null) powerLevelUpText.remove();
+        bulletLevelUpText = new HUDFloatingText(103.0, 50.0, "BULLET LEVEL UP!", this);
     }
 }

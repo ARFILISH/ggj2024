@@ -19,6 +19,9 @@ class LevelEnd extends Entity {
         score = new LevelScore();
         score.data.textAlign = score.result.textAlign = Left;
         score.data.textColor = score.result.textColor = 0x494949;
+        score.newRecord.x = 90.0;
+        score.newRecord.y = -6.0;
+        score.newRecord.rotation = hxd.Math.degToRad(25.0);
         score.setShowTween(0.5, 12.0, 70.0, 0.0, null, 40.0, 1.0, 0.5, 20.0, 140.0, 0.0, null, 100.0, 1.0, startedShowing, finishedShowing);
         score.setHideTween(0.5, 12.0, 40.0, 1.0, null, 0.0, 0.0, 0.5, 20.0, 100.0, 1.0, null, 40.0, 0.0, startedHiding, finishedHiding);
         Main.instance.hud.add(score, 4);

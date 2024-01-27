@@ -41,8 +41,8 @@
 />
 <layer
     idx="5"
-    vScroll="6"
-    hScroll="-6"
+    vScrollSpeed="50"
+    hScrollSpeed="-50"
     src="backgrounds/bgStage01_3.png"
     parallaxScale="1.0"
     r="0.0" b="0.5" g="0.0" a="0.0"
@@ -50,8 +50,8 @@
 />
 <layer
     idx="6"
-    vScroll="-6"
-    hScroll="6"
+    vScrollSpeed="-50"
+    hScrollSpeed="50"
     src="backgrounds/bgStage01_3.png"
     parallaxScale="1.0"
     r="0.5" b="0.0" g="0.0" a="0.0"

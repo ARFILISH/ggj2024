@@ -2,7 +2,7 @@ setLayer(0);
 
 loadBackground("backgrounds/bgStage01.xml");
 
-setCameraVelocity(0.0, -30.0);
+setCameraVelocity(0.0, -40.0);
 
 function levelStart() {
     playMusic("sounds/musStage01.wav");
@@ -139,8 +139,11 @@ function stopMoving() {
 }
 
 function bossDeath() {
+    for (j in 0...32) spawnItem(ItemJoke, LocalSpace(Math.random(198.0) - 99.0, Math.random(80.0) + 60.0));
+    for (j in 0...16) spawnItem(ItemValue(100), LocalSpace(Math.random(198.0) - 99.0, 40.0 + Math.random(-9.0)));
+    for (j in 0...8) spawnItem(ItemPower(0.16), LocalSpace(Math.random(198.0) - 99.0, 45.0 + Math.random(-9.0)));
+    playSound("sounds/sndNoise06.wav");
     addEvent(getTime() + 2.0, ending);
-    addEvent(getTime() + 5.0, wait);
 }
 
 function ending() {
@@ -164,3 +167,4 @@ addEvent(90.0, eyes);
 addEvent(92.8, boss);
 addEvent(93.0, stopMoving);
 addEvent(94.0, dialogue);
+addEvent(190.0, wait);

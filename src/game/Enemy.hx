@@ -133,6 +133,7 @@ class Enemy extends Entity {
         parser.allowTypes = true;
         final ast = parser.parseString(file);
         final interp = new Interp();
+        interp.variables["this"] = this;
         interp.variables["getTime"] = () -> time;
         interp.variables["getLocalX"] = get_lx;
         interp.variables["setLocalX"] = set_lx;
@@ -337,7 +338,7 @@ class Enemy extends Entity {
     }
 
     private function addEvent(time: Float, cb: Void->Void):Void {
-        if (this.time > time) return;
+        if (markedForDeletion || this.time > time) return;
         final event = { time: time, cb: cb };
         var i = 0;
         while (i < events.length && events[i].time < time) i++;
@@ -471,7 +472,6 @@ class Enemy extends Entity {
             }
         }
         final enemy = scene.spawnEntity(newX, newY, Enemy);
-        enemy.loadScript(script, preparedParams);
         enemy.maxHealth = enemy.health = health;
         enemy.scoreBonus = scoreBonus;
         enemy.items = items;
@@ -479,6 +479,7 @@ class Enemy extends Entity {
         enemy.onDestroyed = destroyedCb;
         enemy.onKilled = killedCb;
         children.push(enemy);
+        enemy.loadScript(script, preparedParams);
     }
 
     private function setPreparedParam(k: String, v: Any):Void {

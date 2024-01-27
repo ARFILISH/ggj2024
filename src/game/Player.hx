@@ -21,8 +21,9 @@ class Player extends Entity {
     private var grazeParticles : Particles;
     private var grazeParticleSettings : Dynamic;
     private var hitboxSprite : Bitmap;
-
+    
     private var invincibility : Float;
+    
 
     private var focusing : Bool;
 
@@ -41,6 +42,10 @@ class Player extends Entity {
     public var canShoot : Bool;
     private var inputShouldBeEnabled : Bool;
     private var inputEnabled : Bool;
+
+    #if debug
+    private var invincible : Bool;
+    #end
 
     private override function added(s2d: h2d.Scene):Void {
         sprite = new Sprite();
@@ -163,7 +168,7 @@ class Player extends Entity {
             case 1: for (i in 0...2) shootTimers.add({ time: 0.14 * (i > 0 ? 1 : 0) });
             case 2: for (i in 0...3) shootTimers.add({ time: 0.12 * (i > 0 ? 1 : 0) });
             case 3: {
-                for (i in 0...3) shootTimers.add({ time: 0.09 * i > 0 ? 1 : 0 });
+                for (i in 0...3) shootTimers.add({ time: 0.09 * (i > 0 ? 1 : 0) });
                 shootBullet(x - 20.0, y - 6.0, 0);
                 shootBullet(x + 20.0, y - 6.0, 0);
             }
@@ -193,7 +198,12 @@ class Player extends Entity {
 
     public function addPower(power: Float):Void {
         if (this.power >= 5.0) return;
+        final intPower = Std.int(this.power);
         this.power = hxd.Math.min(this.power + power, 5.0);
+        if (Std.int(this.power) > intPower) {
+            if (hud != null) hud.powerLevelUp();
+            AudioManager.instance.playSound(15, "sounds/sndLevelUp.wav");
+        }
         hud.update(this);
     }
 
@@ -202,6 +212,8 @@ class Player extends Entity {
         if (bulletLevel < 3 && availableBullets == 8 * (bulletLevel + 1) * 2) {
             availableBullets = Std.int(availableBullets / 2);
             bulletLevel++;
+            if (hud != null) hud.bulletLevelUp();
+            AudioManager.instance.playSound(15, "sounds/sndLevelUp.wav");
         }
         hud.update(this);
     }
@@ -223,6 +235,9 @@ class Player extends Entity {
     }
 
     public function applyDamage():Void {
+        #if debug
+        if (invincible) return;
+        #end
         if (invincibility > 0.0 || timeBeforeDeath >= 0.0) return;
         AudioManager.instance.playSound(0, "sounds/sndPlayerDamage.wav");
         lives--;
@@ -249,6 +264,22 @@ class Player extends Entity {
         score = Std.int(score / 2);
         hud.update(this);
     }
+
+    #if debug
+    private override function event(event: hxd.Event):Void {
+        if (event.kind == EKeyDown) {
+            switch (event.keyCode) {
+                case hxd.Key.I: {
+                    invincible = !invincible;
+                    AudioManager.instance.playSoundNoChannel("sounds/sndTriangle02.wav");
+                }
+                case hxd.Key.QWERTY_EQUALS: Main.timeMultiplier += 1.0;
+                case hxd.Key.QWERTY_MINUS: Main.timeMultiplier -= 1.0;
+            }
+            
+        }
+    }
+    #end
 
     @:keep inline public function isAlive():Bool {
         return !markedForDeletion && timeBeforeDeath < 0.0 && lives > 0;

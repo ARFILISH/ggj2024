@@ -1,4 +1,4 @@
-<dialogue bg="backgrounds/bgGameOver.xml">
+<dialogue bg="backgrounds/bgJoe.xml">
     <character src="sprites/dialogue/sprDialogueJoe.xml">Joe</character>
     <phrase you="false">Stop right here, Deu.</phrase>
     <phrase you="true">How the hell do you know my name?</phrase>
