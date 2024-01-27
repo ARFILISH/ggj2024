@@ -36,7 +36,7 @@ class Main extends hxd.App {
     }
 
     private override function onResize():Void {
-        s2d.scaleMode = LetterBox(320, 180, true, Center, Center);
+        s2d.scaleMode = Stretch(320, 180);
     }
 
     private override function loadAssets(onLoaded: Void->Void):Void {
@@ -46,7 +46,7 @@ class Main extends hxd.App {
     private override function init():Void {
         save = hxd.Save.load({ firstGame : true, bestScore : 0, soundVolume : 1.0, musicVolume : 1.0 }, "lhSave");
         hud = new h2d.Scene();
-        s2d.scaleMode = hud.scaleMode = LetterBox(320, 180, true, Center, Center);
+        s2d.scaleMode = hud.scaleMode = Stretch(320, 180);
         inputManager = new InputManager();
         inputManager.addAction(Types.InputActions.MoveUp, [ InputManager.ActionInput.Down(hxd.Key.UP) ]);
         inputManager.addAction(Types.InputActions.MoveDown, [ InputManager.ActionInput.Down(hxd.Key.DOWN) ]);
