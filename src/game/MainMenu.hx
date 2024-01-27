@@ -48,6 +48,7 @@ class MainMenu extends Scene {
         background.remove();
         border.remove();
         score.remove();
+        logo.remove();
         if (press != null) press.remove();
     }
 
