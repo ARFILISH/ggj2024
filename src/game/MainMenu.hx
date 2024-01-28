@@ -37,7 +37,7 @@ class MainMenu extends Scene {
             score.setScale(1.3);
             score.text = 'Highest score: ${Main.instance.save.bestScore}';
             score.y = 120.0;
-            press.y = 150.0;
+            press.y = 145.0;
             press.text += "\nor Esc to reset the save";
         }
         timer = spawnEntity(0.0, 0.0, Timer);
