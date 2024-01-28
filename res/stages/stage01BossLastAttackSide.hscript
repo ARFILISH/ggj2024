@@ -11,4 +11,9 @@ setBulletManagerHitmask(0, 1 | 2);
 setBulletManagerHitRadius(0, 2.0);
 setBulletManagerMoveType(0, MoveTypeFixed());
 setBulletManagerAngle(0, 0.0, Math.degToRad(2.0));
+setBulletManagerDestroyWithParent(0, true);
 bulletManagerShoot(0);
+
+function wait() { }
+
+addEvent(30.0, wait);

@@ -119,6 +119,8 @@ class Enemy extends Entity {
         }
         bulletManagers.clear();
         for (c in children) {
+            c.onDestroyed = null;
+            c.onKilled = null;
             c.parent = null;
             c.destroy();
         }
