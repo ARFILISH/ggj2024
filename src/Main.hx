@@ -55,6 +55,8 @@ class Main extends hxd.App {
         inputManager.addAction(Types.InputActions.Focus, [ InputManager.ActionInput.Down(hxd.Key.SHIFT) ]);
         inputManager.addAction(Types.InputActions.Shoot, [ InputManager.ActionInput.Pressed(hxd.Key.Z) ]);
         audioManager = new AudioManager();
+        audioManager.setSoundVolume(save.soundVolume);
+        audioManager.setMusicVolume(save.musicVolume);
         changeScene(game.MainMenu);
         hxd.Window.getInstance().addResizeEvent(onResize);
         hxd.Window.getInstance().addEventTarget(onEvent);

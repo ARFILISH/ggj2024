@@ -9,6 +9,7 @@ class MainMenu extends Scene {
     private var logo : h2d.Bitmap;
     private var score : h2d.Text;
     private var press : h2d.Text;
+    private var volume : h2d.Text;
     private var timer : Timer;
     private var enabled : Bool;
 
@@ -29,7 +30,7 @@ class MainMenu extends Scene {
         press.x = score.x = 160.0;
         press.text = "Enter/Z to start game";
         if (Main.instance.save.firstGame) {
-            score.text = "Controls: Arrows - move\nZ - shoot\nShift - focus";
+            score.text = "Controls:\nArrows - move\nZ - shoot\nShift - focus";
             score.setScale(0.8);
             score.y = 112.0;
             press.y = 160.0;
@@ -40,6 +41,11 @@ class MainMenu extends Scene {
             press.y = 145.0;
             press.text += "\nor Esc to reset the save";
         }
+        volume = new h2d.Text(font, s2d);
+        volume.x = 3.0;
+        volume.y = 130.0;
+        volume.setScale(0.6);
+        volume.text = "S/W to change sound volume\nA/D to change music volume";
         timer = spawnEntity(0.0, 0.0, Timer);
         timer.onTimeout = Main.instance.changeScene.bind(Playfield, [ "stages/stage01.hscript" ]);
     }
@@ -49,6 +55,7 @@ class MainMenu extends Scene {
         border.remove();
         score.remove();
         logo.remove();
+        volume.remove();
         if (press != null) press.remove();
     }
 
@@ -66,6 +73,38 @@ class MainMenu extends Scene {
                 Main.instance.save.firstGame = true;
                 hxd.Save.delete("lhSave");
                 Main.instance.changeScene(MainMenu);
+            }
+            case hxd.Key.S: {
+                var volume = Std.int(Main.instance.save.soundVolume * 10) / 10 - 0.2;
+                if (volume < 0.0) volume = 0.0;
+                else if (volume > 1.0) volume = 1.0;
+                AudioManager.instance.setSoundVolume(Main.instance.save.soundVolume = volume);
+                AudioManager.instance.playSound(15, "sounds/sndPickupItem.wav");
+                hxd.Save.save(Main.instance.save, "lhSave");
+            }
+            case hxd.Key.W: {
+                var volume = Std.int(Main.instance.save.soundVolume * 10) / 10 + 0.2;
+                if (volume < 0.0) volume = 0.0;
+                else if (volume > 1.0) volume = 1.0;
+                AudioManager.instance.setSoundVolume(Main.instance.save.soundVolume = volume);
+                AudioManager.instance.playSound(15, "sounds/sndPickupItem.wav");
+                hxd.Save.save(Main.instance.save, "lhSave");
+            }
+            case hxd.Key.A: {
+                var volume = Std.int(Main.instance.save.musicVolume * 10) / 10 - 0.2;
+                if (volume < 0.0) volume = 0.0;
+                else if (volume > 1.0) volume = 1.0;
+                AudioManager.instance.setMusicVolume(Main.instance.save.musicVolume = volume);
+                AudioManager.instance.playMusic("sounds/sndPickupItem.wav", false);
+                hxd.Save.save(Main.instance.save, "lhSave");
+            }
+            case hxd.Key.D: {
+                var volume = Std.int(Main.instance.save.musicVolume * 10) / 10 + 0.2;
+                if (volume < 0.0) volume = 0.0;
+                else if (volume > 1.0) volume = 1.0;
+                AudioManager.instance.setMusicVolume(Main.instance.save.musicVolume = volume);
+                AudioManager.instance.playMusic("sounds/sndPickupItem.wav", false);
+                hxd.Save.save(Main.instance.save, "lhSave");
             }
         }
     }

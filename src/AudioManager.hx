@@ -21,6 +21,17 @@ class AudioManager {
         musicSoundGroup.maxAudible = 1;
     }
 
+    public function setSoundVolume(vol: Float):Void {
+        sfxSoundGroup.volume = vol;
+    }
+
+    public function setMusicVolume(vol: Float):Void {
+        musicSoundGroup.volume = vol;
+    }
+
+    inline public function getSoundVolume():Float return sfxSoundGroup.volume;
+    inline public function getMusicVolume():Float return musicSoundGroup.volume;
+
     public function playSound(channel: Int, path: String, loop: Bool = false, volume: Float = 1.0):Void {
         if (channel < 0 || channel >= 16) throw 'Invalid sound channel $channel!';
         if (channels.exists(channel)) channels[channel].stop();
@@ -51,7 +62,7 @@ class AudioManager {
 
     public function playMusic(path: String, loop: Bool = true, volume: Float = 1.0):Void {
         if (music != null) music.stop();
-        music = hxd.Res.load(path).toSound().play(loop, volume, null, sfxSoundGroup);
+        music = hxd.Res.load(path).toSound().play(loop, volume, null, musicSoundGroup);
         music.onEnd = () -> { if (!music.loop) music = null; };
     }
 
